@@ -2,25 +2,27 @@ import { Injectable, BadRequestException, UnauthorizedException } from '@nestjs/
 import { JwtService } from '@nestjs/jwt';
 import { UserModel } from '../../model/auth.model';
 import { hashPassword, comparePassword } from '../../utils/hash.util';
-import { Role } from '../../../generated/prisma/client';
+import { UserRole } from '../../../generated/prisma/client';
 
 @Injectable()
 export class AuthService {
   constructor(private jwtService: JwtService) {}
 
-  async register(data: { name: string; email: string; password: string; role?: string }) {
+  async register(data: { name: string; email: string; password: string; role?: string; province?: string; city?: string }) {
     const existingUser = await UserModel.findByEmail(data.email);
     if (existingUser) {
       throw new BadRequestException('El email ya está registrado');
     }
 
     const hashedPassword = hashPassword(data.password);
-    const role: Role = (data.role as Role) || 'BUYER';
+    const role: UserRole = (data.role as UserRole) || 'BUYER';
     const user = await UserModel.create({
       name: data.name,
       email: data.email,
       password: hashedPassword,
       role,
+      province: data.province || 'Unknown',
+      city: data.city || 'Unknown',
     });
 
     const { password: _, ...userWithoutPassword } = user;

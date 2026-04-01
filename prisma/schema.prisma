@@ -7,68 +7,161 @@ datasource db {
   provider = "postgresql"
 }
 
-model User {
-  id       String @id @default(uuid())
-  name     String
-  email    String @unique
-  password String
-  role     Role   @default(BUYER)
-
-  cars      Car[]
-  favorites Favorite[]
-
-  createdAt DateTime @default(now())
-}
-
-enum Role {
+enum UserRole {
   BUYER
   SELLER
   ADMIN
 }
 
-model Car {
-  id          String  @id @default(uuid())
-  title       String
-  price       Float
-  brand       String
-  model       String
-  year        Int
-  description String?
-
-  sellerId String
-  seller   User   @relation(fields: [sellerId], references: [id])
-
-  images CarImage[]
-
-  createdAt  DateTime    @default(now())
-  favorites  Favorite[]
-  aiAnalysis AiAnalysis?
+enum VehicleType {
+  SEDAN
+  SUV
+  TRUCK
+  COUPE
+  HATCHBACK
+  VAN
+  WAGON
+  CONVERTIBLE
+  SPORTS
+  ELECTRIC
+  OTHER
 }
 
-model CarImage {
-  id  String @id @default(uuid())
-  url String
+enum FuelType {
+  GASOLINE
+  DIESEL
+  ELECTRIC
+  HYBRID
+  LPG
+  CNG
+  OTHER
+}
 
-  carId String
-  car   Car    @relation(fields: [carId], references: [id])
+enum Transmission {
+  MANUAL
+  AUTOMATIC
+  SEMI_AUTOMATIC
+  CVT
+  OTHER
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      UserRole @default(BUYER)
+  province  String
+  city      String
+  createdAt DateTime @default(now()) @db.Timestamp()
+
+  vehicles       Vehicle[]       @relation("SellerVehicles")
+  favorites     Favorite[]
+  messagesSent     Message[]       @relation("SenderMessages")
+  messagesReceived Message[]       @relation("ReceiverMessages")
+  userPreference  UserPreference?
+}
+
+model Vehicle {
+  id                String   @id @default(uuid())
+  vehicleType       VehicleType
+  brand             String
+  model             String
+  year              Int
+  color             String?
+  fuelType          FuelType?
+  transmission      Transmission?
+  mileage           Int?
+  price             Float?
+  province          String?
+  city              String?
+  latitude          Float?
+  longitude         Float?
+  lastServiceDate   DateTime? @db.Date()
+  lastOilChange     DateTime? @db.Date()
+  accidents         String?
+  interiorCondition Int?
+  paintCondition    Int?
+  rimsCondition     Int?
+  dashboardCondition Int?
+  tiresCondition    Int?
+  description       String?
+  createdAt         DateTime @default(now()) @db.Timestamp()
+
+  sellerId String
+  seller   User   @relation("SellerVehicles", fields: [sellerId], references: [id])
+
+  images      VehicleImage[]
+  favorites   Favorite[]
+  messages    Message[]
+  aiAnalysis  AiAnalysis?
+}
+
+model VehicleImage {
+  id        String   @id @default(uuid())
+  url       String
+  title     String?
+  createdAt DateTime @default(now()) @db.Timestamp()
+
+  vehicleId String
+  vehicle   Vehicle  @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+}
+
+model Message {
+  id        String   @id @default(uuid())
+  message   String
+  createdAt DateTime @default(now()) @db.Timestamp()
+
+  vehicleId String
+  vehicle   Vehicle  @relation(fields: [vehicleId], references: [id])
+
+  senderId   String
+  sender     User    @relation("SenderMessages", fields: [senderId], references: [id])
+
+  receiverId String
+  receiver   User    @relation("ReceiverMessages", fields: [receiverId], references: [id])
 }
 
 model Favorite {
-  id String @id @default(uuid())
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now()) @db.Timestamp()
 
-  userId String
-  carId  String
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
 
-  user User @relation(fields: [userId], references: [id])
-  car  Car  @relation(fields: [carId], references: [id])
+  vehicleId String
+  vehicle   Vehicle  @relation(fields: [vehicleId], references: [id])
+
+  @@unique([userId, vehicleId])
+}
+
+model UserPreference {
+  id            String   @id @default(uuid())
+  yearRange     Int[]    @default([])
+  mileageRange  Int[]    @default([])
+  colorRange    String[] @default([])
+  interiorRange Int[]    @default([])
+  paintRange    Int[]    @default([])
+  rimsRange     Int[]    @default([])
+  dashboardRange Int[]   @default([])
+  tiresRange    Int[]    @default([])
+  fuelTypes     FuelType[] @default([])
+  vehicleTypes  VehicleType[] @default([])
+  brands        String[] @default([])
+  models        String[] @default([])
+
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id])
 }
 
 model AiAnalysis {
-  id             String @id @default(uuid())
+  id             String   @id @default(uuid())
   condition      String
-  damageReport   String
-  estimatedPrice Float
+  estimatedPrice Float?
+  damageReport   String?
+  confidence     Float?
+  createdAt      DateTime @default(now()) @db.Timestamp()
 
-  carId String @unique
-  car   Car    @relation(fields: [carId], references: [id])
+  vehicleId String @unique
+  vehicle   Vehicle @relation(fields: [vehicleId], references: [id])
 }

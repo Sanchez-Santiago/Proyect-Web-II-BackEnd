@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import { PrismaClient, Role } from '../../generated/prisma/client';
+import { PrismaClient, UserRole } from '../../generated/prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 
 const adapter = new PrismaPg({
@@ -13,11 +13,31 @@ export const UserModel = {
   },
 
   async findById(id: string) {
-    return prisma.user.findUnique({ where: { id } });
+    return prisma.user.findUnique({
+      where: { id },
+      include: { userPreference: true },
+    });
   },
 
-  async create(data: { name: string; email: string; password: string; role: Role }) {
+  async create(data: { name: string; email: string; password: string; role: UserRole; province: string; city: string }) {
     return prisma.user.create({ data });
+  },
+
+  async update(id: string, data: any) {
+    return prisma.user.update({ where: { id }, data });
+  },
+
+  async delete(id: string) {
+    return prisma.user.delete({ where: { id } });
+  },
+
+  async findAll(filters?: { role?: UserRole; province?: string; city?: string }) {
+    const where: any = {};
+    if (filters?.role) where.role = filters.role;
+    if (filters?.province) where.province = filters.province;
+    if (filters?.city) where.city = filters.city;
+
+    return prisma.user.findMany({ where });
   },
 };
 
