@@ -1,10 +1,11 @@
 import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards } from '@nestjs/common';
 import { AiAnalysisService } from './ai-analysis.service';
-import { CreateAiAnalysisDto, UpdateAiAnalysisDto, CreateAiAnalysisInput, UpdateAiAnalysisInput } from './dto/ai-analysis.dto';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { CreateAiAnalysisInput } from './dto/create-ai-analysis.dto';
+import { UpdateAiAnalysisInput } from './dto/update-ai-analysis.dto';
+import { JwtGuard } from '../../guards/jwt.guard';
 
 @Controller('ai-analysis')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtGuard)
 export class AiAnalysisController {
   constructor(private aiAnalysisService: AiAnalysisService) {}
 

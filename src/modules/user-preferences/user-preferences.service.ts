@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { UserPreferenceModel } from '../../model/prisma.model';
-import { UpdateUserPreferenceInput } from './dto/user-preference.dto';
+import { UpdateUserPreferenceInput } from './dto/update-user-preference.dto';
 
 @Injectable()
 export class UserPreferencesService {

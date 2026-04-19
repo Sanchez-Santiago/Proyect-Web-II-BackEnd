@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { FavoriteModel, VehicleModel } from '../../model/prisma.model';
-import { CreateFavoriteInput, FavoriteFiltersInput } from './dto/favorite.dto';
+import { CreateFavoriteInput } from './dto/create-favorite.dto';
+import { FavoriteFiltersInput } from './dto/favorite-filters.dto';
 
 @Injectable()
 export class FavoritesService {

@@ -1,6 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { VehicleModel, VehicleImageModel } from '../../model/prisma.model';
-import { CreateVehicleInput, UpdateVehicleInput, VehicleFiltersInput } from './dto/vehicle.dto';
+import { CreateVehicleInput } from './dto/create-vehicle.dto';
+import { UpdateVehicleInput } from './dto/update-vehicle.dto';
+import { VehicleFiltersInput } from './dto/vehicle-filters.dto';
 
 @Injectable()
 export class VehiclesService {

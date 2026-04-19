@@ -1,10 +1,11 @@
 import { Controller, Get, Post, Body, Param, Query, UseGuards, Request } from '@nestjs/common';
 import { MessagesService } from './messages.service';
-import { CreateMessageDto, MessageFiltersDto, CreateMessageInput, MessageFiltersInput } from './dto/message.dto';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { CreateMessageInput } from './dto/create-message.dto';
+import { MessageFiltersInput } from './dto/message-filters.dto';
+import { JwtGuard } from '../../guards/jwt.guard';
 
 @Controller('messages')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtGuard)
 export class MessagesController {
   constructor(private messagesService: MessagesService) {}
 

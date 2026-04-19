@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { AiAnalysisModel, VehicleModel } from '../../model/prisma.model';
-import { CreateAiAnalysisInput, UpdateAiAnalysisInput } from './dto/ai-analysis.dto';
+import { CreateAiAnalysisInput } from './dto/create-ai-analysis.dto';
+import { UpdateAiAnalysisInput } from './dto/update-ai-analysis.dto';
 
 @Injectable()
 export class AiAnalysisService {

@@ -1,14 +1,16 @@
 import { Controller, Get, Post, Put, Delete, Body, Param, Query, UseGuards, Request } from '@nestjs/common';
 import { VehiclesService } from './vehicles.service';
-import { CreateVehicleDto, UpdateVehicleDto, VehicleFiltersDto, CreateVehicleInput, UpdateVehicleInput, VehicleFiltersInput } from './dto/vehicle.dto';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { CreateVehicleInput } from './dto/create-vehicle.dto';
+import { UpdateVehicleInput } from './dto/update-vehicle.dto';
+import { VehicleFiltersInput } from './dto/vehicle-filters.dto';
+import { JwtGuard } from '../../guards/jwt.guard';
 
 @Controller('vehicles')
 export class VehiclesController {
   constructor(private vehiclesService: VehiclesService) {}
 
   @Post()
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtGuard)
   async create(@Request() req: any, @Body() dto: CreateVehicleInput) {
     const vehicle = await this.vehiclesService.create(req.user.userId, dto);
     return { message: 'Vehículo creado exitosamente', vehicle };
@@ -33,14 +35,14 @@ export class VehiclesController {
   }
 
   @Put(':id')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtGuard)
   async update(@Param('id') id: string, @Body() dto: UpdateVehicleInput) {
     const vehicle = await this.vehiclesService.update(id, dto);
     return { message: 'Vehículo actualizado exitosamente', vehicle };
   }
 
   @Delete(':id')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtGuard)
   async delete(@Param('id') id: string) {
     const result = await this.vehiclesService.delete(id);
     return result;

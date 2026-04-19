@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { MessageModel } from '../../model/prisma.model';
-import { CreateMessageInput, MessageFiltersInput } from './dto/message.dto';
+import { CreateMessageInput } from './dto/create-message.dto';
+import { MessageFiltersInput } from './dto/message-filters.dto';
 
 @Injectable()
 export class MessagesService {

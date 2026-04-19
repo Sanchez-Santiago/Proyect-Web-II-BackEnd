@@ -1,7 +1,7 @@
 import { Injectable, BadRequestException, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UserModel } from '../../model/auth.model';
-import { hashPassword, comparePassword } from '../../utils/hash.util';
+import { hashPassword, comparePassword } from '../../common/utils/hash.util';
 import { UserRole } from '../../../generated/prisma/client';
 
 @Injectable()
