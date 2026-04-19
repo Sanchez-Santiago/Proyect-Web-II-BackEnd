@@ -99,6 +99,10 @@ export const VehicleImageModel = {
     return prisma.vehicleImage.createMany({ data });
   },
 
+  async findById(id: string) {
+    return prisma.vehicleImage.findUnique({ where: { id } });
+  },
+
   async findByVehicleId(vehicleId: string) {
     return prisma.vehicleImage.findMany({ where: { vehicleId } });
   },

@@ -506,10 +506,45 @@ export class HomeController {
         </tbody>
       </table>
 
-      <h3 style="margin: 24px 0 12px; font-size: 14px;">Ejemplo: Crear Vehículo</h3>
-      <pre><span class="keyword">curl</span> -X POST http://localhost:3000/vehicles \\
-  -H <span class="string">"Content-Type: application/json"</span> \\
+<h3 style="margin: 24px 0 12px; font-size: 14px;">Imágenes</h3>
+      <table>
+        <tr><th>Método</th><th>Ruta</th><th>Descripción</th><th>Auth</th><th>Notas</th></tr>
+        <tr><td><span class="method POST">POST</span></td><td><code>/vehicles/:id/images</code></td><td>Agregar imagen</td><td><span class="auth-badge auth-yes">Sí</span></td><td>Solo propietario</td></tr>
+        <tr><td><span class="method POST">POST</span></td><td><code>/vehicles/:id/images/bulk</code></td><td>Agregar múltiples</td><td><span class="auth-badge auth-yes">Sí</span></td><td>Solo propietario</td></tr>
+        <tr><td><span class="method GET">GET</span></td><td><code>/vehicles/:id/images</code></td><td>Listar imágenes</td><td><span class="auth-badge auth-no">No</span></td><td>-</td></tr>
+        <tr><td><span class="method DELETE">DELETE</span></td><td><code>/vehicles/:id/images/:imageId</code></td><td>Eliminar imagen</td><td><span class="auth-badge auth-yes">Sí</span></td><td>Solo propietario</td></tr>
+      </table>
+
+      <div class="info-box" style="margin: 16px 0;">
+        <div class="info-box-title">🔒 Verificación de propiedad</div>
+        <p style="color: var(--text-secondary); font-size: 13px;">Solo el propietario del vehículo puede agregar o eliminar imágenes. Si intentas hacerlo con un vehículo que no te pertenece, recibirás:</p>
+        <pre style="margin-top: 8px;">{
+  "message": "No eres el propietario de este vehículo",
+  "statusCode": 403
+}</pre>
+      </div>
+
+      <h3 style="margin: 24px 0 12px; font-size: 14px;">Ejemplo: Agregar imagen</h3>
+      <pre><span class="keyword">curl</span> -X POST http://localhost:3000/vehicles/{vehicleId}/images \\
   -H <span class="string">"Authorization: Bearer &lt;TOKEN&gt;"</span> \\
+  -d <span class="string">'{"url": "https://mi-servidor.com/img1.jpg", "title": "Foto frontal"}'</span></pre>
+
+      <h3 style="margin: 24px 0 12px; font-size: 14px;">Ejemplo: Agregar múltiples imágenes</h3>
+      <pre><span class="keyword">curl</span> -X POST http://localhost:3000/vehicles/{vehicleId}/images/bulk \\
+  -H <span class="string">"Authorization: Bearer &lt;TOKEN&gt;"</span> \\
+  -d <span class="string">'{"images": [{"url": "img1.jpg"}, {"url": "img2.jpg", "title": "Interior"}]}'</span></pre>
+
+      <h3 style="margin: 24px 0 12px; font-size: 14px;">Ejemplo: Obtener imágenes de un vehículo</h3>
+      <pre><span class="keyword">curl</span> -X GET http://localhost:3000/vehicles/{vehicleId}/images</pre>
+
+      <h3 style="margin: 24px 0 12px; font-size: 14px;">Ejemplo: Eliminar imagen</h3>
+      <pre><span class="keyword">curl</span> -X DELETE http://localhost:3000/vehicles/{vehicleId}/images/{imageId} \\
+  -H <span class="string">"Authorization: Bearer &lt;TOKEN&gt;"</span></pre>
+
+      <h3 style="margin: 24px 0 12px; font-size: 14px;">Ejemplo: Crear Vehículo</h3>
+      <pre><span class="keyword">curl</span> -X POST http://localhost:3000/vehicles \
+  -H <span class="string">"Content-Type: application/json"</span> \
+  -H <span class="string">"Authorization: Bearer &lt;TOKEN&gt;"</span> \
   -d <span class="string">'{
     "vehicleType": "SEDAN",
     "brand": "Toyota",
