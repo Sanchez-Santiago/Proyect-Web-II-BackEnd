@@ -1,14 +1,26 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
-import { FavoriteModel } from '../../model/prisma.model';
-import { CreateFavoriteInput, FavoriteFiltersInput } from './dto/favorite.dto';
+import { FavoriteModel } from '../../models/favorite.model';
+import { PublicationModel } from '../../models/publication.model';
+import { CreateFavoriteInput } from './dto/create-favorite.dto';
+import { FavoriteFiltersInput } from './dto/favorite-filters.dto';
 
 @Injectable()
 export class FavoritesService {
   async add(userId: string, input: CreateFavoriteInput) {
+    if (!input.publicationId) {
+      throw new BadRequestException('Se requiere publicationId');
+    }
+
+    const publication = await PublicationModel.findById(input.publicationId);
+    if (!publication) throw new NotFoundException('Publicación no encontrada');
+
     const existing = await FavoriteModel.isFavorite(userId, input.publicationId);
     if (existing) throw new BadRequestException('La publicación ya está en favoritos');
 
-    return FavoriteModel.create({ userId, publicationId: input.publicationId });
+    return FavoriteModel.create({
+      user: { connect: { id: userId } },
+      publication: { connect: { id: input.publicationId } },
+    });
   }
 
   async remove(userId: string, publicationId: string) {
@@ -25,8 +37,6 @@ export class FavoritesService {
           brand: filters.brand,
           priceMin: filters.priceMin,
           priceMax: filters.priceMax,
-          from: filters.from ? new Date(filters.from) : undefined,
-          to: filters.to ? new Date(filters.to) : undefined,
         }
       : undefined;
 

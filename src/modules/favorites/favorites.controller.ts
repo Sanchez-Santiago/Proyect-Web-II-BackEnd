@@ -1,10 +1,11 @@
 import { Controller, Get, Post, Delete, Body, Param, Query, UseGuards, Request } from '@nestjs/common';
 import { FavoritesService } from './favorites.service';
-import { CreateFavoriteDto, FavoriteFiltersDto, CreateFavoriteInput, FavoriteFiltersInput } from './dto/favorite.dto';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { CreateFavoriteInput } from './dto/create-favorite.dto';
+import { FavoriteFiltersInput } from './dto/favorite-filters.dto';
+import { JwtGuard } from '../../guards/jwt.guard';
 
 @Controller('favorites')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtGuard)
 export class FavoritesController {
   constructor(private favoritesService: FavoritesService) {}
 

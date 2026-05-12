@@ -1,23 +1,42 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { VehicleModel, VehicleImageModel } from '../../model/prisma.model';
-import { CreateVehicleInput, UpdateVehicleInput, VehicleFiltersInput } from './dto/vehicle.dto';
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { VehicleModel } from '../../models/vehicle.model';
+import { VehicleImageModel } from '../../models/vehicle-image.model';
+import { CreateVehicleInput } from './dto/create-vehicle.dto';
+import { UpdateVehicleInput } from './dto/update-vehicle.dto';
+import { VehicleFiltersInput } from './dto/vehicle-filters.dto';
 
 @Injectable()
 export class VehiclesService {
   async create(sellerId: string, input: CreateVehicleInput) {
-    const { images, analyticState, ...vehicleData } = input;
+    const { images, ...vehicleData } = input;
 
     const vehicle = await VehicleModel.create({
-      ...vehicleData,
-      analyticState: analyticState ? { create: analyticState } : undefined,
+      seller: { connect: { id: sellerId } },
+      model: vehicleData.model,
+      brand: vehicleData.brand,
+      year: vehicleData.year,
+      vehicleType: vehicleData.vehicleType,
+      fuelType: vehicleData.fuelType || 'GASOLINE',
+      transmission: vehicleData.transmission || 'MANUAL',
+      color: vehicleData.color,
+      mileage: vehicleData.mileage || 0,
+      accidents: vehicleData.accidents,
+      version: vehicleData.version,
+      doors: vehicleData.doors,
+      engine: vehicleData.engine,
+      ownersCount: vehicleData.ownersCount || 1,
+      vin: vehicleData.vin,
+      licensePlate: vehicleData.licensePlate,
+      hasDebt: vehicleData.hasDebt || false,
+      debtAmount: vehicleData.debtAmount || 0,
     });
 
     if (images && images.length > 0) {
       await VehicleImageModel.createMany(
         images.map((img) => ({
           vehicleId: vehicle.id,
-          url: img.url,
-          name: img.name,
+          imageUrl: img.url,
+          imageName: img.title || null,
         })),
       );
     }
@@ -34,6 +53,9 @@ export class VehiclesService {
   async findAll(filters: VehicleFiltersInput) {
     const processedFilters: any = { ...filters };
 
+    if (filters.createdAtFrom) processedFilters.createdAtFrom = new Date(filters.createdAtFrom);
+    if (filters.createdAtTo) processedFilters.createdAtTo = new Date(filters.createdAtTo);
+
     return VehicleModel.findAll(processedFilters);
   }
 
@@ -41,18 +63,26 @@ export class VehiclesService {
     const existing = await VehicleModel.findById(id);
     if (!existing) throw new NotFoundException('Vehículo no encontrado');
 
-    const { images, analyticState, ...vehicleData } = input;
+    const { images, ...vehicleData } = input as any;
 
     await VehicleModel.update(id, {
-      ...vehicleData,
-      analyticState: analyticState
-        ? {
-            upsert: {
-              create: analyticState,
-              update: analyticState,
-            },
-          }
-        : undefined,
+      model: vehicleData.model,
+      brand: vehicleData.brand,
+      year: vehicleData.year,
+      vehicleType: vehicleData.vehicleType,
+      fuelType: vehicleData.fuelType,
+      transmission: vehicleData.transmission,
+      color: vehicleData.color,
+      mileage: vehicleData.mileage,
+      accidents: vehicleData.accidents,
+      version: vehicleData.version,
+      doors: vehicleData.doors,
+      engine: vehicleData.engine,
+      ownersCount: vehicleData.ownersCount,
+      vin: vehicleData.vin,
+      licensePlate: vehicleData.licensePlate,
+      hasDebt: vehicleData.hasDebt,
+      debtAmount: vehicleData.debtAmount,
     });
 
     if (images) {
@@ -61,8 +91,8 @@ export class VehiclesService {
         await VehicleImageModel.createMany(
           images.map((img) => ({
             vehicleId: id,
-            url: img.url,
-            name: img.name,
+            imageUrl: img.url,
+            imageName: img.title || null,
           })),
         );
       }
@@ -77,5 +107,67 @@ export class VehiclesService {
 
     await VehicleModel.delete(id);
     return { message: 'Vehículo eliminado correctamente' };
+  }
+
+  async addImage(sellerId: string, vehicleId: string, url: string, title?: string) {
+    const vehicle = await VehicleModel.findById(vehicleId);
+    if (!vehicle) throw new NotFoundException('Vehículo no encontrado');
+    
+    if (vehicle.sellerId !== sellerId) {
+      throw new ForbiddenException('No eres el propietario de este vehículo');
+    }
+
+    const image = await VehicleImageModel.create({
+      vehicle: { connect: { id: vehicleId } },
+      imageUrl: url,
+      imageName: title || null,
+    });
+
+    return image;
+  }
+
+  async addImagesBulk(sellerId: string, vehicleId: string, images: { url: string; title?: string }[]) {
+    const vehicle = await VehicleModel.findById(vehicleId);
+    if (!vehicle) throw new NotFoundException('Vehículo no encontrado');
+    
+    if (vehicle.sellerId !== sellerId) {
+      throw new ForbiddenException('No eres el propietario de este vehículo');
+    }
+
+    const result = await VehicleImageModel.createMany(
+      images.map((img) => ({
+        vehicleId,
+        imageUrl: img.url,
+        imageName: img.title || null,
+      })),
+    );
+
+    return { count: result.count };
+  }
+
+  async getImages(vehicleId: string) {
+    const vehicle = await VehicleModel.findById(vehicleId);
+    if (!vehicle) throw new NotFoundException('Vehículo no encontrado');
+
+    return VehicleImageModel.findByVehicleId(vehicleId);
+  }
+
+  async deleteImage(sellerId: string, imageId: string, vehicleId: string) {
+    const image = await VehicleImageModel.findById(imageId);
+    if (!image) throw new NotFoundException('Imagen no encontrada');
+    
+    if (image.vehicleId !== vehicleId) {
+      throw new NotFoundException('Imagen no pertenece a este vehículo');
+    }
+    
+    const vehicle = await VehicleModel.findById(vehicleId);
+    if (!vehicle) throw new NotFoundException('Vehículo no encontrado');
+    
+    if (vehicle.sellerId !== sellerId) {
+      throw new ForbiddenException('No eres el propietario de este vehículo');
+    }
+
+    await VehicleImageModel.delete(imageId);
+    return { message: 'Imagen eliminada correctamente' };
   }
 }
