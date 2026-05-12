@@ -1,21 +1,29 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { UserPreferenceModel } from '../../model/prisma.model';
+import { BuyerPreferenceModel } from '../../models/buyer-preference.model';
 import { UpdateUserPreferenceInput } from './dto/update-user-preference.dto';
 
 @Injectable()
 export class UserPreferencesService {
   async upsert(userId: string, input: UpdateUserPreferenceInput) {
-    return UserPreferenceModel.upsert(userId, input);
+    return BuyerPreferenceModel.upsert(userId, {
+      user: { connect: { id: userId } },
+      minimumBudget: input.minimumBudget ? Number(input.minimumBudget) : null,
+      maximumBudget: input.maximumBudget ? Number(input.maximumBudget) : null,
+      preferredBrand: input.preferredBrand || null,
+      preferredModel: input.preferredModel || null,
+      minimumYear: input.minimumYear || null,
+      maximumYear: input.maximumYear || null,
+    });
   }
 
   async findByUserId(userId: string) {
-    const preference = await UserPreferenceModel.findByUserId(userId);
+    const preference = await BuyerPreferenceModel.findByUserId(userId);
     if (!preference) throw new NotFoundException('Preferencias no encontradas');
     return preference;
   }
 
   async delete(userId: string) {
-    await UserPreferenceModel.delete(userId);
+    await BuyerPreferenceModel.delete(userId);
     return { message: 'Preferencias eliminadas correctamente' };
   }
 }

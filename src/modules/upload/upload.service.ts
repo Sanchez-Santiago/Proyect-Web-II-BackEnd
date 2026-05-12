@@ -5,9 +5,9 @@ import { v2 as cloudinary } from 'cloudinary';
 export class UploadService {
   constructor() {
     cloudinary.config({
-      cloud_name: process.env.CLOUDINARY_CLOUD_NAME || 'dgjtuizmg',
-      api_key: process.env.CLOUDINARY_API_KEY || '217313813894761',
-      api_secret: process.env.CLOUDINARY_API_SECRET || 'yrM31uLguSRLLOvK6N0hGBQpNoM',
+      cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+      api_key: process.env.CLOUDINARY_API_KEY,
+      api_secret: process.env.CLOUDINARY_API_SECRET,
     });
   }
 

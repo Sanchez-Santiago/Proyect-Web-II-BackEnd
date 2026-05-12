@@ -2,7 +2,7 @@
 
 ## Descripción del Proyecto
 
-Plataforma web backend para la gestión de compra y venta de vehículos usados, desarrollada con NestJS. El sistema permite a vendedores publicar vehículos y a compradores buscar, filtrar y guardar favoritos. Incluye análisis inteligente del estado del vehículo mediante IA.
+Plataforma web backend para la gestión de compra y venta de vehículos usados, desarrollada con NestJS. El sistema permite a vendedores publicar vehículos y a compradores buscar, filtrar, guardar favoritos y contactar vendedores. Incluye análisis inteligente del estado del vehículo mediante IA, chat en tiempo real, y gestión de documentos.
 
 **Materia:** Web II  
 **Institución:** Instituto Universitario Aeronáutico (IUA)
@@ -18,120 +18,157 @@ Plataforma web backend para la gestión de compra y venta de vehículos usados, 
 |------------|-----------|
 | **NestJS** | Framework Node.js con arquitectura modular |
 | **TypeScript** | Lenguaje de programación tipado |
-| **Prisma ORM** | ORM para gestión de base de datos PostgreSQL |
+| **Prisma ORM** | ORM para gestión de base de datos PostgreSQL (v6) |
 | **PostgreSQL** | Base de datos relacional (Supabase hosted) |
 | **Zod** | Validación de esquemas y tipos |
-| **JWT** | Autenticación stateless |
+| **JWT** | Autenticación stateless con refresh tokens |
 | **bcrypt** | Hash de contraseñas |
-| **Supabase** | Storage y servicios cloud |
+| **Socket.io** | Chat en tiempo real |
 | **Cloudinary** | Almacenamiento de imágenes |
 
-## Estructura del Proyecto
+## Arquitectura
+
+### Base de Datos
+
+- **19 modelos** de Prisma:
+  - User, Vehicle, VehicleImage, VehicleDocument, VehicleFeature
+  - Publication, PublicationFeature, PublicationStatusHistory
+  - Chat, Message
+  - Favorite, BuyerPreference
+  - Notification, RefreshToken, PasswordHistory
+  - VehicleAnalytics, VehicleView, Report, SavedSearch, AuditLog
+
+- **9 enums**:
+  - Role (BUYER, SELLER, ADMIN)
+  - VehicleType, FuelType, Transmission, PublicationStatus
+  - ReportStatus, DocumentType, MessageStatus
+
+### Estructura del Proyecto
 
 ```
 src/
 ├── main.ts                    # Punto de entrada
-├── app.module.ts             # Módulo raíz
+├── app.module.ts             # Módulo raíz (15 módulos)
 │
 ├── modules/                  # Módulos de funcionalidad
-│   ├── auth/               # Autenticación
+│   ├── auth/               # Autenticación JWT + Refresh Tokens
 │   │   ├── auth.controller.ts
 │   │   ├── auth.service.ts
-│   │   ├── auth.module.ts
+│   │   ├── refresh-token.service.ts
+│   │   ├── password.service.ts
 │   │   └── dto/
-│   ├── vehicles/            # Gestión de vehículos
-│   │   ├── vehicles.controller.ts
-│   │   ├── vehicles.service.ts
-│   │   ├── vehicles.module.ts
-│   │   └── dto/
-│   ├── messages/            # Mensajes entre usuarios
-│   │   ├── messages.controller.ts
-│   │   ├── messages.service.ts
-│   │   └── dto/
-│   ├── favorites/           # Favoritos del usuario
-│   │   ├── favorites.controller.ts
-│   │   ├── favorites.service.ts
-│   │   └── dto/
-│   ├── user-preferences/   # Preferencias de búsqueda
-│   │   ├── user-preferences.controller.ts
-│   │   ├── user-preferences.service.ts
-│   │   └── dto/
-│   └── ai-analysis/        # Análisis de IA
-│       ├── ai-analysis.controller.ts
-│       ├── ai-analysis.service.ts
-│       └── dto/
+│   ├── vehicles/            # Gestión de vehículos (datos técnicos)
+│   ├── publications/        # Publicaciones de venta
+│   ├── chat/                # Chat + WebSocket (Socket.io)
+│   ├── favorites/           # Favoritos por publicación
+│   ├── user-preferences/   # Preferencias del buyer
+│   ├── ai-analysis/        # Análisis de IA (VehicleAnalytics)
+│   ├── notifications/      # Notificaciones del usuario
+│   ├── reports/            # Denuncias (admin)
+│   ├── vehicle-features/  # Catálogo de características (admin)
+│   ├── vehicle-views/      # Tracking de vistas
+│   ├── saved-searches/     # Búsquedas guardadas
+│   ├── documents/          # Documentos de vehículos
+│   ├── upload/             # Upload a Cloudinary
+│   └── home/               # Documentación API (HTML)
+│
+├── models/                  # Modelos de datos Prisma
+│   ├── prisma.ts          # Cliente Prisma
+│   └── *.model.ts         # Métodos por entidad
 │
 ├── guards/                  # Guards de autenticación
-│   ├── jwt.guard.ts       # Validación JWT
-│   └── roles.guard.ts    # Control de roles
-│
-├── middleware/             # Middleware personalizado
-│   ├── jwt.middleware.ts
-│   └── role.middleware.ts
+│   ├── jwt.guard.ts       # Validación JWT (header/cookie/query)
+│   └── roles.guard.ts    # Control de roles (ADMIN)
 │
 ├── decorators/             # Decoradores personalizados
 │   └── roles.decorator.ts
 │
-├── config/                 # Configuraciones
-│   └── database.config.ts
+├── gateways/              # WebSocket
+│   └── chat.gateway.ts   # Chat en tiempo real
 │
-├── common/                # Utilidades comunes
-│   └── utils/
-│       └── hash.util.ts
-│
-└── model/                 # Modelos de datos
-    ├── auth.model.ts
-    └── prisma.model.ts
+└── common/                # Utilidades comunes
+    └── utils/
+        └── hash.util.ts
 ```
 
 ## Roles del Sistema
 
 | Rol | Descripción |
 |-----|-------------|
-| **ADMIN** | Gestiona usuarios, contenido y análisis de IA |
+| **ADMIN** | Gestiona usuarios, contenido, análisis de IA, features, reportes |
 | **SELLER** | Publica y gestiona vehículos a la venta |
-| **BUYER** | Busca, visualiza, guarda favoritos y contacta vendedores |
+| **BUYER** | Busca, visualiza, guarda favoritos, contacta vendedores |
 
-## Endpoints de API
+## Endpoints de API (73 total)
 
 ### Autenticación
 
 | Método | Ruta | Descripción | Auth |
 |--------|------|-------------|------|
 | POST | `/auth/register` | Registrar nuevo usuario | No |
-| POST | `/auth/login` | Iniciar sesión | No |
-| POST | `/auth/logout` | Cerrar sesión | Sí |
+| POST | `/auth/login` | Iniciar sesión (retorna cookies + tokens) | No |
+| POST | `/auth/refresh` | Rotar refresh token | No |
+| POST | `/auth/logout` | Cerrar sesión (revoca refresh token) | Sí |
+| POST | `/auth/change-password` | Cambiar contraseña (con historial) | Sí |
 | GET | `/auth/me` | Obtener usuario autenticado | Sí |
 
-### Vehículos
+### Vehículos (datos técnicos)
 
 | Método | Ruta | Descripción | Auth |
 |--------|------|-------------|------|
-| POST | `/vehicles` | Crear nuevo vehículo | Sí |
-| GET | `/vehicles/filters` |listar/buscar vehículos | No |
-| GET | `/vehicles/filters/:id` | Ver vehículo por ID | No |
+| POST | `/vehicles` | Crear vehículo | Sí |
+| GET | `/vehicles/filters` | Listar/buscar vehículos | No |
 | GET | `/vehicles/:id` | Ver vehículo por ID | No |
 | PUT | `/vehicles/:id` | Actualizar vehículo | Sí |
 | DELETE | `/vehicles/:id` | Eliminar vehículo | Sí |
+| POST | `/vehicles/:id/images` | Agregar imagen | Sí |
+| POST | `/vehicles/:id/images/bulk` | Agregar múltiples imágenes | Sí |
+| GET | `/vehicles/:id/images` | Listar imágenes | No |
+| DELETE | `/vehicles/:id/images/:imageId` | Eliminar imagen | Sí |
 
-### Mensajes
+### Publicaciones (datos de venta)
 
 | Método | Ruta | Descripción | Auth |
 |--------|------|-------------|------|
-| POST | `/messages` | Enviar mensaje | Sí |
-| GET | `/messages/conversations` | Listar conversaciones | Sí |
-| GET | `/messages/vehicle/:vehicleId` | Mensajes por vehículo | Sí |
-| GET | `/messages/filters` | Buscar mensajes | Sí |
-| GET | `/messages/:id` | Ver mensaje por ID | Sí |
+| POST | `/publications` | Crear publicación | Sí |
+| GET | `/publications/filters` | Listar publicaciones activas | No |
+| GET | `/publications/:id` | Ver publicación | No |
+| GET | `/publications/vehicle/:vehicleId` | Publicación de un vehículo | No |
+| PUT | `/publications/:id` | Actualizar publicación | Sí |
+| PUT | `/publications/:id/status` | Cambiar estado (ACTIVE/SOLD/PENDING/PAUSED) | Sí |
+| DELETE | `/publications/:id` | Eliminar publicación | Sí |
+| POST | `/publications/:id/features` | Agregar característica | Sí |
+| DELETE | `/publications/:id/features/:featureId` | Quitar característica | Sí |
+| GET | `/publications/:id/features` | Listar características | No |
+
+### Chat (REST)
+
+| Método | Ruta | Descripción | Auth |
+|--------|------|-------------|------|
+| POST | `/chats` | Crear/obtener chat por publicación | Sí |
+| GET | `/chats` | Mis chats | Sí |
+| GET | `/chats/:id` | Ver chat | Sí |
+| GET | `/chats/:id/messages` | Mensajes del chat | Sí |
+| POST | `/chats/:id/messages` | Enviar mensaje | Sí |
+| POST | `/chats/:id/read` | Marcar mensajes como leídos | Sí |
+| GET | `/chats/:id/unread` | Contar no leídos | Sí |
+| DELETE | `/chats/:id` | Eliminar chat | Sí |
+
+### Chat (WebSocket)
+
+- `joinChat` - Unirse a un chat
+- `sendMessage` - Enviar mensaje
+- `markAsRead` - Marcar como leído
+- `leaveChat` - Salir del chat
 
 ### Favoritos
 
 | Método | Ruta | Descripción | Auth |
 |--------|------|-------------|------|
-| POST | `/favorites` | Agregar a favoritos | Sí |
-| DELETE | `/favorites/:vehicleId` | Quitar de favoritos | Sí |
+| POST | `/favorites` | Agregar a favoritos (por publicationId) | Sí |
+| DELETE | `/favorites/:publicationId` | Quitar de favoritos | Sí |
 | GET | `/favorites` | Listar favoritos | Sí |
-| GET | `/favorites/check/:vehicleId` | Verificar si es favorito | Sí |
+| GET | `/favorites/check/:publicationId` | Verificar si es favorito | Sí |
 
 ### Preferencias de Usuario
 
@@ -141,7 +178,7 @@ src/
 | PUT | `/user-preferences` | Actualizar preferencias | Sí |
 | DELETE | `/user-preferences` | Eliminar preferencias | Sí |
 
-### Análisis de IA
+### Análisis de IA (VehicleAnalytics)
 
 | Método | Ruta | Descripción | Auth |
 |--------|------|-------------|------|
@@ -150,149 +187,67 @@ src/
 | PUT | `/ai-analysis/:id` | Actualizar análisis | Sí |
 | DELETE | `/ai-analysis/:id` | Eliminar análisis | Sí |
 
-### Upload de Imágenes
+### Vehicle Features (catálogo)
+
+| Método | Ruta | Descripción | Auth |
+|--------|------|-------------|------|
+| GET | `/vehicle-features` | Listar todas las características | No |
+| GET | `/vehicle-features/:id` | Ver característica | No |
+| POST | `/vehicle-features` | Crear característica | ADMIN |
+| DELETE | `/vehicle-features/:id` | Eliminar característica | ADMIN |
+
+### Vehicle Views (tracking)
+
+| Método | Ruta | Descripción | Auth |
+|--------|------|-------------|------|
+| POST | `/vehicle-views/publication/:id` | Registrar vista | No |
+| GET | `/vehicle-views/publication/:id` | Ver vistas de publicación | No |
+| GET | `/vehicle-views/publication/:id/count` | Contar vistas | No |
+| GET | `/vehicle-views/my-views` | Mis vistas | Sí |
+
+### Saved Searches
+
+| Método | Ruta | Descripción | Auth |
+|--------|------|-------------|------|
+| POST | `/saved-searches` | Guardar búsqueda | Sí |
+| GET | `/saved-searches` | Listar búsquedas guardadas | Sí |
+| GET | `/saved-searches/:id` | Ver búsqueda | Sí |
+| PUT | `/saved-searches/:id` | Actualizar búsqueda | Sí |
+| DELETE | `/saved-searches/:id` | Eliminar búsqueda | Sí |
+
+### Documents
+
+| Método | Ruta | Descripción | Auth |
+|--------|------|-------------|------|
+| GET | `/documents/vehicle/:vehicleId` | Listar documentos | No |
+| POST | `/documents/vehicle/:vehicleId` | Subir documento | Sí |
+| POST | `/documents/:id/verify` | Verificar documento | ADMIN |
+| DELETE | `/documents/:id` | Eliminar documento | Sí |
+
+### Notifications
+
+| Método | Ruta | Descripción | Auth |
+|--------|------|-------------|------|
+| GET | `/notifications` | Listar notificaciones | Sí |
+| POST | `/notifications/:id/read` | Marcar como leída | Sí |
+| POST | `/notifications/read-all` | Marcar todas como leídas | Sí |
+| DELETE | `/notifications/:id` | Eliminar notificación | Sí |
+
+### Reports
+
+| Método | Ruta | Descripción | Auth |
+|--------|------|-------------|------|
+| POST | `/reports` | Crear reporte | Sí |
+| GET | `/reports` | Listar reportes (admin) | ADMIN |
+| GET | `/reports/:id` | Ver reporte | ADMIN |
+| PUT | `/reports/:id/status` | Cambiar estado (admin) | ADMIN |
+| DELETE | `/reports/:id` | Eliminar reporte (admin) | ADMIN |
+
+### Upload
 
 | Método | Ruta | Descripción | Auth |
 |--------|------|-------------|------|
 | POST | `/upload/image` | Subir imagen desde URL | Sí |
-
-## Ejemplos de Uso
-
-### Registro de Usuario
-
-```bash
-curl -X POST http://localhost:3000/auth/register \
-  -H "Content-Type: application/json" \
-  -d '{
-    "name": "Juan Pérez",
-    "email": "juan@email.com",
-    "password": "Password123",
-    "role": "BUYER"
-  }'
-```
-
-**Respuesta:**
-```json
-{
-  "message": "Usuario registrado exitosamente",
-  "user": {
-    "id": "uuid",
-    "name": "Juan Pérez",
-    "email": "juan@email.com",
-    "role": "BUYER"
-  }
-}
-```
-
-### Iniciar Sesión
-
-```bash
-curl -X POST http://localhost:3000/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{
-    "email": "juan@email.com",
-    "password": "Password123"
-  }'
-```
-
-**Respuesta:**
-```json
-{
-  "message": "Login exitoso",
-  "token": "eyJhbGciOiJIUzI1NiIs...",
-  "user": {
-    "id": "uuid",
-    "name": "Juan Pérez",
-    "email": "juan@email.com",
-    "role": "BUYER"
-  }
-}
-```
-
-### Buscar Vehículos (con filtros)
-
-```bash
-curl -X GET "http://localhost:3000/vehicles/filters?brand=Toyota&priceMax=30000" \
-  -H "Authorization: Bearer <TOKEN>"
-```
-
-### Crear Vehículo
-
-```bash
-curl -X POST http://localhost:3000/vehicles \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer <TOKEN>" \
-  -d '{
-    "vehicleType": "SEDAN",
-    "brand": "Toyota",
-    "model": "Corolla",
-    "year": 2022,
-    "color": "Negro",
-    "fuelType": "GASOLINE",
-    "transmission": "AUTOMATIC",
-    "mileage": 15000,
-    "price": 24000,
-    "province": "Buenos Aires",
-    "city": "La Plata",
-    "interiorCondition": 8,
-    "paintCondition": 9,
-    "description": "Excelente estado"
-  }'
-```
-
-### Agregar a Favoritos
-
-```bash
-curl -X POST http://localhost:3000/favorites \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer <TOKEN>" \
-  -d '{"vehicleId": "uuid-del-vehiculo"}'
-```
-
-### Enviar Mensaje
-
-```bash
-curl -X POST http://localhost:3000/messages \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer <TOKEN>" \
-  -d '{
-    "vehicleId": "uuid-del-vehiculo",
-    "receiverId": "uuid-del-vendedor",
-    "message": "Me interesa este vehículo"
-  }'
-```
-
-### Actualizar Preferencias
-
-```bash
-curl -X PUT http://localhost:3000/user-preferences \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer <TOKEN>" \
-  -d '{
-    "brands": ["Toyota", "Honda", "Ford"],
-    "yearRange": [2018, 2024],
-    "priceMax": 30000,
-    "fuelTypes": ["GASOLINE", "HYBRID"]
-  }'
-```
-
-## Filtros de Vehículos Disponibles
-
-| Parámetro | Tipo | Descripción |
-|-----------|------|------------|
-| `brand` | string | Marca del vehículo |
-| `model` | string | Modelo |
-| `year` | number | Año específico |
-| `yearMin` | number | Año mínimo |
-| `yearMax` | number | Año máximo |
-| `priceMin` | number | Precio mínimo |
-| `priceMax` | number | Precio máximo |
-| `vehicleType` | enum | Tipo de vehículo |
-| `fuelType` | string | Tipo de combustible |
-| `transmission` | string | Tipo de transmisión |
-| `province` | string | Provincia |
-| `city` | string | Ciudad |
-| `sellerId` | uuid | ID del vendedor |
 
 ## Variables de Entorno
 
@@ -311,6 +266,11 @@ JWT_EXPIRES_IN=7d
 
 # CORS (separar múltiples orígenes con coma)
 CORS_ORIGINS=http://localhost:5173
+
+# Cloudinary
+CLOUDINARY_CLOUD_NAME=tu_cloud_name
+CLOUDINARY_API_KEY=tu_api_key
+CLOUDINARY_API_SECRET=tu_api_secret
 
 # Supabase (opcional)
 SUPABASE_URL=https://xxx.supabase.co
@@ -341,27 +301,40 @@ npm run prisma:push
 
 ## Características Principales
 
-1. **Autenticación JWT**: Sistema seguro de registro y login con tokens JWT
-2. **Gestión de Vehículos**: CRUD completo con validación Zod
-3. **Sistema de Búsqueda**: Filtros avanzados por marca, año, precio, ubicación, etc.
-4. **Favoritos**: Los compradores pueden guardar vehículos de interesa
-5. **Mensajería**: Comunicación directa entre compradores y vendedores
-6. **Análisis de IA**: Evaluación automática del estado del vehículo
-7. **Preferencias**: Los usuarios pueden guardar criterios de búsqueda
-8. **CORS Configurable**: Control de accesos desde variables de entorno
+1. **Autenticación JWT avanzada**: Registro, login, logout, cambio de contraseña con historial, refresh token rotation con cookies httpOnly
+2. **Separación Vehicle/Publication**: Datos técnicos del vehículo separados de la información de venta
+3. **Gestión de Vehículos**: CRUD completo con validación Zod, gestión de imágenes
+4. **Publicaciones**: CRUD con historial de precios y estados, asignación de features
+5. **Sistema de Favoritos**: Por publicationId (no por vehicleId)
+6. **Chat en tiempo real**: REST + WebSocket (Socket.io) con JWT auth en handshake
+7. **Análisis de IA**: VehicleAnalytics con 8 campos de condición + score
+8. **Preferencias de Buyer**: Presupuesto, marca, modelo, año
+9. **Notificaciones**: Sistema de notificaciones por usuario
+10. **Reports**: Denuncias de publicaciones con estados (PENDING, RESOLVED, DISMISSED)
+11. **VehicleFeatures**: Catálogo de características (aire acondicionado, GPS, etc.)
+12. **VehicleViews**: Tracking de vistas por publicación
+13. **SavedSearches**: Guardar filtros de búsqueda
+14. **Documents**: Gestión de documentos de vehículos (título, VTV, seguro, etc.)
+15. **Subida de imágenes**: Integración con Cloudinary
+16. **CORS configurable**: Desde variable de entorno
 
 ## Roadmap
 
-- [x] Sistema de autenticación (registro, login, logout)
+- [x] Sistema de autenticación JWT + Refresh Tokens
 - [x] Gestión de vehículos (CRUD completo)
-- [x] Búsqueda y filtrado de vehículos
-- [x] Sistema de favoritos para compradores
-- [x] Mensajería entre usuarios
+- [x] Publicaciones separadas de vehículos
+- [x] Búsqueda y filtrado de publicaciones
+- [x] Sistema de favoritos (por publicación)
+- [x] Chat REST + WebSocket
 - [x] Análisis de IA del estado del vehículo
-- [x] Preferencias de usuario
-- [ ] Panel de administración
-- [ ] Notificaciones en tiempo real
-- [ ] Upload de imágenes
+- [x] Preferencias de usuario (buyer)
+- [x] Notificaciones
+- [x] Reportes (admin)
+- [x] Vehicle Features (admin)
+- [x] Vehicle Views tracking
+- [x] Saved Searches
+- [x] Documents (vehículos)
+- [x] Upload de imágenes (Cloudinary)
 
 ## Licencia
 

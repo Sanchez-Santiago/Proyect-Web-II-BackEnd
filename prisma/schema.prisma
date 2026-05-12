@@ -46,123 +46,363 @@ enum Transmission {
   OTHER
 }
 
-model User {
-  id        String   @id @default(uuid())
-  name      String
-  email     String   @unique
-  password  String
-  role      UserRole @default(BUYER)
-  province  String
-  city      String
-  createdAt DateTime @default(now()) @db.Timestamp()
+enum PublicationStatus {
+  ACTIVE
+  PENDING
+  SOLD
+  CANCELLED
+  EXPIRED
+}
 
-  vehicles       Vehicle[]       @relation("SellerVehicles")
-  favorites     Favorite[]
-  messagesSent     Message[]       @relation("SenderMessages")
-  messagesReceived Message[]       @relation("ReceiverMessages")
-  userPreference  UserPreference?
+enum MessageStatus {
+  SENT
+  DELIVERED
+  READ
+}
+
+enum ReportStatus {
+  PENDING
+  RESOLVED
+  DISMISSED
+}
+
+enum DocumentType {
+  TITLE
+  VTV
+  INSURANCE
+  REGISTRATION
+  TRANSFER
+  OTHER
+}
+
+model User {
+  id                String    @id @default(uuid())
+  fullName          String    @map("full_name")
+  birthDate         DateTime? @db.Date() @map("birth_date")
+  email             String    @unique
+  passwordHash      String    @map("password_hash")
+  phone             String?
+  alternativePhone  String?   @map("alternative_phone")
+  role              UserRole  @default(BUYER)
+  verified          Boolean   @default(false) @map("verified")
+  failedLoginAttempts Int     @default(0) @map("failed_login_attempts")
+  province          String?
+  city              String?
+  createdAt         DateTime  @default(now()) @db.Timestamp() @map("created_at")
+
+  vehicles         Vehicle[]    @relation("SellerVehicles")
+  publications     Publication[] @relation("SellerPublications")
+  favorites        Favorite[]
+  buyerPreference  BuyerPreference?
+  messages         Message[]
+  notifications    Notification[]
+  refreshTokens    RefreshToken[]
+  passwordHistory  PasswordHistory[]
+  reports          Report[]
+  savedSearches    SavedSearch[]
+  vehicleViews     VehicleView[]
+  auditLogs        AuditLog[]
+
+  @@map("users")
 }
 
 model Vehicle {
-  id                String   @id @default(uuid())
-  vehicleType       VehicleType
-  brand             String
-  model             String
-  year              Int
-  color             String?
-  fuelType          FuelType?
-  transmission      Transmission?
-  mileage           Int?
-  price             Float?
-  province          String?
-  city              String?
-  latitude          Float?
-  longitude         Float?
-  lastServiceDate   DateTime? @db.Date()
-  lastOilChange     DateTime? @db.Date()
-  accidents         String?
-  interiorCondition Int?
-  paintCondition    Int?
-  rimsCondition     Int?
-  dashboardCondition Int?
-  tiresCondition    Int?
-  description       String?
-  createdAt         DateTime @default(now()) @db.Timestamp()
+  id            String       @id @default(uuid())
+  model         String       @map("model")
+  brand         String       @map("brand")
+  version       String?      @map("version")
+  year          Int          @map("year")
+  vehicleType   VehicleType  @map("vehicle_type")
+  fuelType      FuelType     @map("fuel_type")
+  transmission  Transmission @map("transmission")
+  color         String?      @map("color")
+  doors         Int?         @map("doors")
+  engine        String?      @map("engine")
+  mileage       Int          @default(0) @map("mileage")
+  accidents     String?      @map("accidents")
+  ownersCount   Int          @default(1) @map("owners_count")
+  vin           String?      @map("vin")
+  licensePlate  String?      @map("license_plate")
+  hasDebt       Boolean      @default(false) @map("has_debt")
+  debtAmount    Decimal      @default(0) @db.Decimal(12, 2) @map("debt_amount")
+  createdAt     DateTime     @default(now()) @db.Timestamp() @map("created_at")
 
-  sellerId String
+  sellerId String @map("seller_id")
   seller   User   @relation("SellerVehicles", fields: [sellerId], references: [id])
 
-  images      VehicleImage[]
-  favorites   Favorite[]
-  messages    Message[]
-  aiAnalysis  AiAnalysis?
+  images        VehicleImage[]
+  documents     VehicleDocument[]
+  analytics     VehicleAnalytics?
+  publication   Publication?
+
+  @@map("vehicles")
 }
 
 model VehicleImage {
   id        String   @id @default(uuid())
-  url       String
-  title     String?
-  createdAt DateTime @default(now()) @db.Timestamp()
+  imageUrl  String   @map("image_url")
+  imageName String?  @map("image_name")
+  createdAt DateTime @default(now()) @db.Timestamp() @map("created_at")
 
-  vehicleId String
-  vehicle   Vehicle  @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  vehicleId String @map("vehicle_id")
+  vehicle   Vehicle @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+
+  @@map("vehicle_images")
+}
+
+model VehicleDocument {
+  id            String       @id @default(uuid())
+  documentType  DocumentType @map("document_type")
+  documentUrl   String       @map("document_url")
+  verified      Boolean      @default(false) @map("verified")
+  createdAt     DateTime     @default(now()) @db.Timestamp() @map("created_at")
+
+  vehicleId String @map("vehicle_id")
+  vehicle   Vehicle @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+
+  @@map("vehicle_documents")
+}
+
+model VehicleFeature {
+  id           String @id @default(uuid())
+  featureName  String @unique @map("feature_name")
+
+  publications PublicationFeature[]
+
+  @@map("vehicle_features")
+}
+
+model Publication {
+  id          String            @id @default(uuid())
+  title       String?           @map("title")
+  description String?           @map("description")
+  price       Decimal           @db.Decimal(12, 2) @map("price")
+  currency    String            @default("USD") @map("currency")
+  province    String?           @map("province")
+  city        String?           @map("city")
+  latitude    Decimal?          @db.Decimal(10, 8) @map("latitude")
+  longitude   Decimal?          @db.Decimal(11, 8) @map("longitude")
+  status      PublicationStatus @default(ACTIVE) @map("status")
+  createdAt   DateTime          @default(now()) @db.Timestamp() @map("created_at")
+
+  vehicleId String @unique @map("vehicle_id")
+  vehicle   Vehicle @relation(fields: [vehicleId], references: [id])
+
+  sellerId String @map("seller_id")
+  seller   User   @relation("SellerPublications", fields: [sellerId], references: [id])
+
+  favorites              Favorite[]
+  chats                 Chat[]
+  priceHistory          PriceHistory[]
+  statusHistory         PublicationStatusHistory[]
+  vehicleViews          VehicleView[]
+  reports               Report[]
+  publicationFeatures   PublicationFeature[]
+
+  @@map("publications")
+}
+
+model PublicationFeature {
+  publicationId String @map("publication_id")
+  featureId     String @map("feature_id")
+
+  publication Publication @relation(fields: [publicationId], references: [id], onDelete: Cascade)
+  feature     VehicleFeature @relation(fields: [featureId], references: [id], onDelete: Cascade)
+
+  @@id([publicationId, featureId])
+  @@map("publication_features")
+}
+
+model Chat {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now()) @db.Timestamp() @map("created_at")
+
+  publicationId String @map("publication_id")
+  publication   Publication @relation(fields: [publicationId], references: [id])
+
+  messages Message[]
+
+  @@map("chats")
 }
 
 model Message {
-  id        String   @id @default(uuid())
-  message   String
-  createdAt DateTime @default(now()) @db.Timestamp()
+  id        String        @id @default(uuid())
+  message   String        @map("message")
+  status    MessageStatus @default(SENT) @map("status")
+  createdAt DateTime      @default(now()) @db.Timestamp() @map("created_at")
 
-  vehicleId String
-  vehicle   Vehicle  @relation(fields: [vehicleId], references: [id])
+  chatId String @map("chat_id")
+  chat   Chat   @relation(fields: [chatId], references: [id], onDelete: Cascade)
 
-  senderId   String
-  sender     User    @relation("SenderMessages", fields: [senderId], references: [id])
+  userId String @map("user_id")
+  user   User   @relation(fields: [userId], references: [id])
 
-  receiverId String
-  receiver   User    @relation("ReceiverMessages", fields: [receiverId], references: [id])
+  @@map("messages")
 }
 
 model Favorite {
   id        String   @id @default(uuid())
-  createdAt DateTime @default(now()) @db.Timestamp()
+  createdAt DateTime @default(now()) @db.Timestamp() @map("created_at")
 
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
+  userId        String @map("user_id")
+  user          User   @relation(fields: [userId], references: [id])
+  publicationId String @map("publication_id")
+  publication   Publication @relation(fields: [publicationId], references: [id])
 
-  vehicleId String
-  vehicle   Vehicle  @relation(fields: [vehicleId], references: [id])
-
-  @@unique([userId, vehicleId])
+  @@unique([userId, publicationId])
+  @@map("favorites")
 }
 
-model UserPreference {
-  id            String   @id @default(uuid())
-  yearRange     Int[]    @default([])
-  mileageRange  Int[]    @default([])
-  colorRange    String[] @default([])
-  interiorRange Int[]    @default([])
-  paintRange    Int[]    @default([])
-  rimsRange     Int[]    @default([])
-  dashboardRange Int[]   @default([])
-  tiresRange    Int[]    @default([])
-  fuelTypes     FuelType[] @default([])
-  vehicleTypes  VehicleType[] @default([])
-  brands        String[] @default([])
-  models        String[] @default([])
+model BuyerPreference {
+  id              String   @id @default(uuid())
+  minimumBudget   Decimal? @db.Decimal(12, 2) @map("minimum_budget")
+  maximumBudget   Decimal? @db.Decimal(12, 2) @map("maximum_budget")
+  preferredBrand  String?  @map("preferred_brand")
+  preferredModel String?  @map("preferred_model")
+  minimumYear     Int?     @map("minimum_year")
+  maximumYear     Int?     @map("maximum_year")
+  createdAt       DateTime @default(now()) @db.Timestamp() @map("created_at")
 
-  userId String @unique
+  userId String @unique @map("user_id")
   user   User   @relation(fields: [userId], references: [id])
+
+  @@map("buyer_preferences")
 }
 
-model AiAnalysis {
-  id             String   @id @default(uuid())
-  condition      String
-  estimatedPrice Float?
-  damageReport   String?
-  confidence     Float?
-  createdAt      DateTime @default(now()) @db.Timestamp()
+model Notification {
+  id        String   @id @default(uuid())
+  type      String   @map("type")
+  title     String?  @map("title")
+  message   String?  @map("message")
+  isRead    Boolean  @default(false) @map("is_read")
+  createdAt DateTime @default(now()) @db.Timestamp() @map("created_at")
 
-  vehicleId String @unique
-  vehicle   Vehicle @relation(fields: [vehicleId], references: [id])
+  userId String @map("user_id")
+  user   User   @relation(fields: [userId], references: [id])
+
+  @@map("notifications")
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @map("token")
+  expiresAt DateTime @db.Timestamp() @map("expires_at")
+  createdAt DateTime @default(now()) @db.Timestamp() @map("created_at")
+
+  userId String @map("user_id")
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("refresh_tokens")
+}
+
+model PasswordHistory {
+  id           String   @id @default(uuid())
+  passwordHash String   @map("password_hash")
+  createdAt    DateTime @default(now()) @db.Timestamp() @map("created_at")
+
+  userId String @map("user_id")
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("password_history")
+}
+
+model PriceHistory {
+  id        String   @id @default(uuid())
+  amount    Decimal  @db.Decimal(12, 2) @map("amount")
+  currency  String   @default("USD") @map("currency")
+  createdAt DateTime @default(now()) @db.Timestamp() @map("created_at")
+
+  publicationId String @map("publication_id")
+  publication   Publication @relation(fields: [publicationId], references: [id], onDelete: Cascade)
+
+  @@map("price_history")
+}
+
+model PublicationStatusHistory {
+  id        String            @id @default(uuid())
+  oldStatus PublicationStatus? @map("old_status")
+  newStatus PublicationStatus @map("new_status")
+  changedAt DateTime          @default(now()) @db.Timestamp() @map("changed_at")
+
+  publicationId String @map("publication_id")
+  publication   Publication @relation(fields: [publicationId], references: [id], onDelete: Cascade)
+
+  @@map("publication_status_history")
+}
+
+model VehicleAnalytics {
+  id                String   @id @default(uuid())
+  paintCondition    Int?     @map("paint_condition")
+  engineCondition   Int?     @map("engine_condition")
+  interiorCondition Int?    @map("interior_condition")
+  tiresCondition    Int?     @map("tires_condition")
+  rimsCondition     Int?     @map("rims_condition")
+  suspensionCondition Int?   @map("suspension_condition")
+  transmissionCondition Int?  @map("transmission_condition")
+  lightsCondition   Int?     @map("lights_condition")
+  overallScore      Decimal? @db.Decimal(5, 2) @map("overall_score")
+  estimatedPrice   Decimal? @db.Decimal(12, 2) @map("estimated_price")
+  damageDetected    String?  @map("damage_detected")
+  confidenceScore  Decimal? @db.Decimal(5, 2) @map("confidence_score")
+  aiProvider        String?  @map("ai_provider")
+  createdAt         DateTime @default(now()) @db.Timestamp() @map("created_at")
+
+  vehicleId String @unique @map("vehicle_id")
+  vehicle   Vehicle @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+
+  @@map("vehicle_analytics")
+}
+
+model VehicleView {
+  id        String   @id @default(uuid())
+  ipAddress String?  @map("ip_address")
+  createdAt DateTime @default(now()) @db.Timestamp() @map("created_at")
+
+  publicationId String @map("publication_id")
+  publication   Publication @relation(fields: [publicationId], references: [id], onDelete: Cascade)
+
+  userId String? @map("user_id")
+  user   User?   @relation(fields: [userId], references: [id])
+
+  @@map("vehicle_views")
+}
+
+model Report {
+  id          String       @id @default(uuid())
+  reason      String?      @map("reason")
+  description String?      @map("description")
+  status      ReportStatus @default(PENDING) @map("status")
+  createdAt   DateTime     @default(now()) @db.Timestamp() @map("created_at")
+
+  userId        String @map("user_id")
+  user          User   @relation(fields: [userId], references: [id])
+  publicationId String @map("publication_id")
+  publication   Publication @relation(fields: [publicationId], references: [id])
+
+  @@map("reports")
+}
+
+model SavedSearch {
+  id          String   @id @default(uuid())
+  filtersJson Json     @map("filters_json")
+  createdAt   DateTime @default(now()) @db.Timestamp() @map("created_at")
+
+  userId String @map("user_id")
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("saved_searches")
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  action     String   @map("action")
+  tableName  String?  @map("table_name")
+  recordId   String?  @map("record_id")
+  ipAddress  String?  @map("ip_address")
+  createdAt  DateTime @default(now()) @db.Timestamp() @map("created_at")
+
+  userId String? @map("user_id")
+  user   User?   @relation(fields: [userId], references: [id])
+
+  @@map("audit_logs")
 }

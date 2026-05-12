@@ -390,13 +390,26 @@ export class HomeController {
         <a href="#introduccion" class="nav-link"><span class="nav-link-icon">📋</span> Introducción</a>
         <a href="#autenticacion" class="nav-link"><span class="nav-link-icon">🔐</span> Autenticación</a>
         <a href="#vehiculos" class="nav-link"><span class="nav-link-icon">🚗</span> Vehículos</a>
-        <a href="#mensajes" class="nav-link"><span class="nav-link-icon">💬</span> Mensajes</a>
+        <a href="#publicaciones" class="nav-link"><span class="nav-link-icon">📢</span> Publicaciones</a>
+        <a href="#chat" class="nav-link"><span class="nav-link-icon">💬</span> Chat</a>
         <a href="#favoritos" class="nav-link"><span class="nav-link-icon">❤️</span> Favoritos</a>
       </div>
       <div class="nav-section">
-        <div class="nav-section-title">Sistema</div>
+        <div class="nav-section-title">Usuario</div>
         <a href="#preferencias" class="nav-link"><span class="nav-link-icon">⚙️</span> Preferencias</a>
+        <a href="#notificaciones" class="nav-link"><span class="nav-link-icon">🔔</span> Notificaciones</a>
+        <a href="#busquedas" class="nav-link"><span class="nav-link-icon">🔍</span> Búsquedas</a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-title">Análisis</div>
         <a href="#ia" class="nav-link"><span class="nav-link-icon">🤖</span> Análisis IA</a>
+        <a href="#vistas" class="nav-link"><span class="nav-link-icon">👁️</span> Vistas</a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-title">Admin</div>
+        <a href="#features" class="nav-link"><span class="nav-link-icon">✨</span> Features</a>
+        <a href="#reportes" class="nav-link"><span class="nav-link-icon">🚨</span> Reportes</a>
+        <a href="#documentos" class="nav-link"><span class="nav-link-icon">📄</span> Documentos</a>
         <a href="#upload" class="nav-link"><span class="nav-link-icon">📤</span> Upload</a>
       </div>
     </nav>
@@ -431,8 +444,16 @@ export class HomeController {
           <div style="font-size: 12px; color: var(--text-muted);">Institución</div>
         </div>
         <div style="background: var(--bg-secondary); padding: 16px; border-radius: 8px; border: 1px solid var(--border);">
-          <div style="font-size: 24px; font-weight: 700; color: var(--accent);">7</div>
+          <div style="font-size: 24px; font-weight: 700; color: var(--accent);">73</div>
           <div style="font-size: 12px; color: var(--text-muted);">Endpoints</div>
+        </div>
+        <div style="background: var(--bg-secondary); padding: 16px; border-radius: 8px; border: 1px solid var(--border);">
+          <div style="font-size: 24px; font-weight: 700; color: var(--accent);">15</div>
+          <div style="font-size: 12px; color: var(--text-muted);">Módulos</div>
+        </div>
+        <div style="background: var(--bg-secondary); padding: 16px; border-radius: 8px; border: 1px solid var(--border);">
+          <div style="font-size: 24px; font-weight: 700; color: var(--accent);">19</div>
+          <div style="font-size: 12px; color: var(--text-muted);">Modelos DB</div>
         </div>
       </div>
     </section>
@@ -645,6 +666,114 @@ export class HomeController {
       <pre><span class="keyword">curl</span> -X POST http://localhost:3000/upload/image \\
   -H <span class="string">"Authorization: Bearer &lt;TOKEN&gt;"</span> \\
   -d <span class="string">'{"imageUrl": "https://ejemplo.com/img.jpg"}'</span></pre>
+    </section>
+
+    <!-- Publicaciones -->
+    <section id="publicaciones" class="section">
+      <h2 class="section-title"><span class="section-title-icon">📢</span> Publicaciones</h2>
+      <table>
+        <thead><tr><th>Método</th><th>Ruta</th><th>Descripción</th><th>Auth</th></tr></thead>
+        <tbody>
+          <tr><td><span class="method POST">POST</span></td><td><code>/publications</code></td><td>Crear publicación</td><td><span class="auth-badge auth-yes">Sí</span></td></tr>
+          <tr><td><span class="method GET">GET</span></td><td><code>/publications/filters</code></td><td>Buscar con filtros</td><td><span class="auth-badge auth-no">No</span></td></tr>
+          <tr><td><span class="method GET">GET</span></td><td><code>/publications/:id</code></td><td>Ver publicación</td><td><span class="auth-badge auth-no">No</span></td></tr>
+          <tr><td><span class="method PUT">PUT</span></td><td><code>/publications/:id</code></td><td>Actualizar</td><td><span class="auth-badge auth-yes">Sí</span></td></tr>
+          <tr><td><span class="method PUT">PUT</span></td><td><code>/publications/:id/status</code></td><td>Cambiar estado</td><td><span class="auth-badge auth-yes">Sí</span></td></tr>
+          <tr><td><span class="method DELETE">DELETE</span></td><td><code>/publications/:id</code></td><td>Eliminar</td><td><span class="auth-badge auth-yes">Sí</span></td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- Chat -->
+    <section id="chat" class="section">
+      <h2 class="section-title"><span class="section-title-icon">💬</span> Chat (REST)</h2>
+      <table>
+        <thead><tr><th>Método</th><th>Ruta</th><th>Descripción</th><th>Auth</th></tr></thead>
+        <tbody>
+          <tr><td><span class="method POST">POST</span></td><td><code>/chats</code></td><td>Crear chat por publicación</td><td><span class="auth-badge auth-yes">Sí</span></td></tr>
+          <tr><td><span class="method GET">GET</span></td><td><code>/chats</code></td><td>Mis chats</td><td><span class="auth-badge auth-yes">Sí</span></td></tr>
+          <tr><td><span class="method GET">GET</span></td><td><code>/chats/:id/messages</code></td><td>Mensajes del chat</td><td><span class="auth-badge auth-yes">Sí</span></td></tr>
+          <tr><td><span class="method POST">POST</span></td><td><code>/chats/:id/messages</code></td><td>Enviar mensaje</td><td><span class="auth-badge auth-yes">Sí</span></td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- VehicleFeatures -->
+    <section id="features" class="section">
+      <h2 class="section-title"><span class="section-title-icon">✨</span> Vehicle Features (Admin)</h2>
+      <table>
+        <thead><tr><th>Método</th><th>Ruta</th><th>Descripción</th><th>Auth</th></tr></thead>
+        <tbody>
+          <tr><td><span class="method GET">GET</span></td><td><code>/vehicle-features</code></td><td>Catálogo</td><td><span class="auth-badge auth-no">No</span></td></tr>
+          <tr><td><span class="method POST">POST</span></td><td><code>/vehicle-features</code></td><td>Crear (admin)</td><td><span class="auth-badge auth-yes">Sí</span></td></tr>
+          <tr><td><span class="method DELETE">DELETE</span></td><td><code>/vehicle-features/:id</code></td><td>Eliminar (admin)</td><td><span class="auth-badge auth-yes">Sí</span></td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- VehicleViews -->
+    <section id="vistas" class="section">
+      <h2 class="section-title"><span class="section-title-icon">👁️</span> Vehicle Views</h2>
+      <table>
+        <thead><tr><th>Método</th><th>Ruta</th><th>Descripción</th><th>Auth</th></tr></thead>
+        <tbody>
+          <tr><td><span class="method POST">POST</span></td><td><code>/vehicle-views/publication/:id</code></td><td>Trackear vista</td><td><span class="auth-badge auth-no">No</span></td></tr>
+          <tr><td><span class="method GET">GET</span></td><td><code>/vehicle-views/publication/:id</code></td><td>Ver vistas</td><td><span class="auth-badge auth-no">No</span></td></tr>
+          <tr><td><span class="method GET">GET</span></td><td><code>/vehicle-views/publication/:id/count</code></td><td>Contar vistas</td><td><span class="auth-badge auth-no">No</span></td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- SavedSearches -->
+    <section id="busquedas" class="section">
+      <h2 class="section-title"><span class="section-title-icon">🔍</span> Saved Searches</h2>
+      <table>
+        <thead><tr><th>Método</th><th>Ruta</th><th>Descripción</th><th>Auth</th></tr></thead>
+        <tbody>
+          <tr><td><span class="method POST">POST</span></td><td><code>/saved-searches</code></td><td>Guardar búsqueda</td><td><span class="auth-badge auth-yes">Sí</span></td></tr>
+          <tr><td><span class="method GET">GET</span></td><td><code>/saved-searches</code></td><td>Listar</td><td><span class="auth-badge auth-yes">Sí</span></td></tr>
+          <tr><td><span class="method DELETE">DELETE</span></td><td><code>/saved-searches/:id</code></td><td>Eliminar</td><td><span class="auth-badge auth-yes">Sí</span></td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- Notifications -->
+    <section id="notificaciones" class="section">
+      <h2 class="section-title"><span class="section-title-icon">🔔</span> Notificaciones</h2>
+      <table>
+        <thead><tr><th>Método</th><th>Ruta</th><th>Descripción</th><th>Auth</th></tr></thead>
+        <tbody>
+          <tr><td><span class="method GET">GET</span></td><td><code>/notifications</code></td><td>Listar</td><td><span class="auth-badge auth-yes">Sí</span></td></tr>
+          <tr><td><span class="method POST">POST</span></td><td><code>/notifications/:id/read</code></td><td>Marcar leída</td><td><span class="auth-badge auth-yes">Sí</span></td></tr>
+          <tr><td><span class="method DELETE">DELETE</span></td><td><code>/notifications/:id</code></td><td>Eliminar</td><td><span class="auth-badge auth-yes">Sí</span></td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- Reports -->
+    <section id="reportes" class="section">
+      <h2 class="section-title"><span class="section-title-icon">🚨</span> Reports (Admin)</h2>
+      <table>
+        <thead><tr><th>Método</th><th>Ruta</th><th>Descripción</th><th>Auth</th></tr></thead>
+        <tbody>
+          <tr><td><span class="method POST">POST</span></td><td><code>/reports</code></td><td>Denunciar</td><td><span class="auth-badge auth-yes">Sí</span></td></tr>
+          <tr><td><span class="method GET">GET</span></td><td><code>/reports</code></td><td>Listar (admin)</td><td><span class="auth-badge auth-yes">Sí</span></td></tr>
+          <tr><td><span class="method PUT">PUT</span></td><td><code>/reports/:id/status</code></td><td>Cambiar estado</td><td><span class="auth-badge auth-yes">Sí</span></td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- Documents -->
+    <section id="documentos" class="section">
+      <h2 class="section-title"><span class="section-title-icon">📄</span> Documents</h2>
+      <table>
+        <thead><tr><th>Método</th><th>Ruta</th><th>Descripción</th><th>Auth</th></tr></thead>
+        <tbody>
+          <tr><td><span class="method GET">GET</span></td><td><code>/documents/vehicle/:vehicleId</code></td><td>Listar docs</td><td><span class="auth-badge auth-no">No</span></td></tr>
+          <tr><td><span class="method POST">POST</span></td><td><code>/documents/vehicle/:vehicleId</code></td><td>Subir doc</td><td><span class="auth-badge auth-yes">Sí</span></td></tr>
+          <tr><td><span class="method DELETE">DELETE</span></td><td><code>/documents/:id</code></td><td>Eliminar</td><td><span class="auth-badge auth-yes">Sí</span></td></tr>
+        </tbody>
+      </table>
     </section>
 
     <footer class="footer">

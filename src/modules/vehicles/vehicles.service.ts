@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
-import { VehicleModel, VehicleImageModel } from '../../model/prisma.model';
+import { VehicleModel } from '../../models/vehicle.model';
+import { VehicleImageModel } from '../../models/vehicle-image.model';
 import { CreateVehicleInput } from './dto/create-vehicle.dto';
 import { UpdateVehicleInput } from './dto/update-vehicle.dto';
 import { VehicleFiltersInput } from './dto/vehicle-filters.dto';
@@ -10,18 +11,32 @@ export class VehiclesService {
     const { images, ...vehicleData } = input;
 
     const vehicle = await VehicleModel.create({
-      sellerId,
-      ...vehicleData,
-      lastServiceDate: input.lastServiceDate ? new Date(input.lastServiceDate) : undefined,
-      lastOilChange: input.lastOilChange ? new Date(input.lastOilChange) : undefined,
+      seller: { connect: { id: sellerId } },
+      model: vehicleData.model,
+      brand: vehicleData.brand,
+      year: vehicleData.year,
+      vehicleType: vehicleData.vehicleType,
+      fuelType: vehicleData.fuelType || 'GASOLINE',
+      transmission: vehicleData.transmission || 'MANUAL',
+      color: vehicleData.color,
+      mileage: vehicleData.mileage || 0,
+      accidents: vehicleData.accidents,
+      version: vehicleData.version,
+      doors: vehicleData.doors,
+      engine: vehicleData.engine,
+      ownersCount: vehicleData.ownersCount || 1,
+      vin: vehicleData.vin,
+      licensePlate: vehicleData.licensePlate,
+      hasDebt: vehicleData.hasDebt || false,
+      debtAmount: vehicleData.debtAmount || 0,
     });
 
     if (images && images.length > 0) {
       await VehicleImageModel.createMany(
         images.map((img) => ({
           vehicleId: vehicle.id,
-          url: img.url,
-          title: img.title,
+          imageUrl: img.url,
+          imageName: img.title || null,
         })),
       );
     }
@@ -48,12 +63,26 @@ export class VehiclesService {
     const existing = await VehicleModel.findById(id);
     if (!existing) throw new NotFoundException('Vehículo no encontrado');
 
-    const { images, ...vehicleData } = input;
+    const { images, ...vehicleData } = input as any;
 
     await VehicleModel.update(id, {
-      ...vehicleData,
-      lastServiceDate: input.lastServiceDate ? new Date(input.lastServiceDate) : undefined,
-      lastOilChange: input.lastOilChange ? new Date(input.lastOilChange) : undefined,
+      model: vehicleData.model,
+      brand: vehicleData.brand,
+      year: vehicleData.year,
+      vehicleType: vehicleData.vehicleType,
+      fuelType: vehicleData.fuelType,
+      transmission: vehicleData.transmission,
+      color: vehicleData.color,
+      mileage: vehicleData.mileage,
+      accidents: vehicleData.accidents,
+      version: vehicleData.version,
+      doors: vehicleData.doors,
+      engine: vehicleData.engine,
+      ownersCount: vehicleData.ownersCount,
+      vin: vehicleData.vin,
+      licensePlate: vehicleData.licensePlate,
+      hasDebt: vehicleData.hasDebt,
+      debtAmount: vehicleData.debtAmount,
     });
 
     if (images) {
@@ -62,8 +91,8 @@ export class VehiclesService {
         await VehicleImageModel.createMany(
           images.map((img) => ({
             vehicleId: id,
-            url: img.url,
-            title: img.title,
+            imageUrl: img.url,
+            imageName: img.title || null,
           })),
         );
       }
@@ -89,9 +118,9 @@ export class VehiclesService {
     }
 
     const image = await VehicleImageModel.create({
-      vehicleId,
-      url,
-      title,
+      vehicle: { connect: { id: vehicleId } },
+      imageUrl: url,
+      imageName: title || null,
     });
 
     return image;
@@ -108,8 +137,8 @@ export class VehiclesService {
     const result = await VehicleImageModel.createMany(
       images.map((img) => ({
         vehicleId,
-        url: img.url,
-        title: img.title,
+        imageUrl: img.url,
+        imageName: img.title || null,
       })),
     );
 
