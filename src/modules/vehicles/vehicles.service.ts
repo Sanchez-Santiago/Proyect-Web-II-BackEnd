@@ -5,13 +5,11 @@ import { CreateVehicleInput, UpdateVehicleInput, VehicleFiltersInput } from './d
 @Injectable()
 export class VehiclesService {
   async create(sellerId: string, input: CreateVehicleInput) {
-    const { images, ...vehicleData } = input;
+    const { images, analyticState, ...vehicleData } = input;
 
     const vehicle = await VehicleModel.create({
-      sellerId,
       ...vehicleData,
-      lastServiceDate: input.lastServiceDate ? new Date(input.lastServiceDate) : undefined,
-      lastOilChange: input.lastOilChange ? new Date(input.lastOilChange) : undefined,
+      analyticState: analyticState ? { create: analyticState } : undefined,
     });
 
     if (images && images.length > 0) {
@@ -19,7 +17,7 @@ export class VehiclesService {
         images.map((img) => ({
           vehicleId: vehicle.id,
           url: img.url,
-          title: img.title,
+          name: img.name,
         })),
       );
     }
@@ -36,9 +34,6 @@ export class VehiclesService {
   async findAll(filters: VehicleFiltersInput) {
     const processedFilters: any = { ...filters };
 
-    if (filters.createdAtFrom) processedFilters.createdAtFrom = new Date(filters.createdAtFrom);
-    if (filters.createdAtTo) processedFilters.createdAtTo = new Date(filters.createdAtTo);
-
     return VehicleModel.findAll(processedFilters);
   }
 
@@ -46,12 +41,18 @@ export class VehiclesService {
     const existing = await VehicleModel.findById(id);
     if (!existing) throw new NotFoundException('Vehículo no encontrado');
 
-    const { images, ...vehicleData } = input;
+    const { images, analyticState, ...vehicleData } = input;
 
     await VehicleModel.update(id, {
       ...vehicleData,
-      lastServiceDate: input.lastServiceDate ? new Date(input.lastServiceDate) : undefined,
-      lastOilChange: input.lastOilChange ? new Date(input.lastOilChange) : undefined,
+      analyticState: analyticState
+        ? {
+            upsert: {
+              create: analyticState,
+              update: analyticState,
+            },
+          }
+        : undefined,
     });
 
     if (images) {
@@ -61,7 +62,7 @@ export class VehiclesService {
           images.map((img) => ({
             vehicleId: id,
             url: img.url,
-            title: img.title,
+            name: img.name,
           })),
         );
       }

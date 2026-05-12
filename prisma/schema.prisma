@@ -11,20 +11,25 @@ enum UserRole {
   BUYER
   SELLER
   ADMIN
+
+  @@map("user_role")
 }
 
-enum VehicleType {
-  SEDAN
-  SUV
-  TRUCK
-  COUPE
-  HATCHBACK
-  VAN
-  WAGON
-  CONVERTIBLE
-  SPORTS
-  ELECTRIC
-  OTHER
+enum AccountStatus {
+  ACTIVE
+  PENDING_VERIFICATION
+  SUSPENDED
+  BLOCKED
+
+  @@map("account_status")
+}
+
+enum SellerType {
+  PARTICULAR
+  AGENCIA
+  CONCESIONARIA
+
+  @@map("seller_type")
 }
 
 enum FuelType {
@@ -35,6 +40,8 @@ enum FuelType {
   LPG
   CNG
   OTHER
+
+  @@map("fuel_type")
 }
 
 enum Transmission {
@@ -43,125 +50,471 @@ enum Transmission {
   SEMI_AUTOMATIC
   CVT
   OTHER
+
+  @@map("transmission")
+}
+
+enum PublicationStatus {
+  A_LA_VENTA
+  RESERVADO
+  VENDIDO
+  BLOQUEADO
+  FRAUDE
+  SUSPENDIDO
+  PAUSADO
+
+  @@map("publication_status")
+}
+
+enum ModerationStatus {
+  PENDIENTE
+  APROBADA
+  RECHAZADA
+  REVISION_MANUAL
+
+  @@map("moderation_status")
+}
+
+enum LeadStatus {
+  NUEVO
+  CONTACTADO
+  NEGOCIANDO
+  GANADO
+  PERDIDO
+
+  @@map("lead_status")
+}
+
+enum MessageStatus {
+  ENVIADO
+  LEIDO
+  ELIMINADO
+
+  @@map("message_status")
+}
+
+enum Currency {
+  ARS
+  USD
+
+  @@map("currency")
+}
+
+enum SaleStatus {
+  PENDIENTE
+  COMPLETADA
+  CANCELADA
+
+  @@map("sale_status")
+}
+
+enum AlertType {
+  OPORTUNIDAD
+  ANOMALIA
+  ACTIVIDAD_SOSPECHOSA
+  SISTEMA
+  PRECIO
+
+  @@map("alert_type")
+}
+
+enum AlertSeverity {
+  BAJA
+  MEDIA
+  ALTA
+  CRITICA
+
+  @@map("alert_severity")
+}
+
+enum AlertStatus {
+  ABIERTA
+  LEIDA
+  RESUELTA
+  DESCARTADA
+
+  @@map("alert_status")
+}
+
+enum AiAnalysisType {
+  VEHICULO
+  PUBLICACION
+  PRECIO
+  RIESGO
+  FOTO
+  RESPUESTA
+
+  @@map("ai_analysis_type")
+}
+
+enum RecommendationStatus {
+  PENDIENTE
+  VISTA
+  DESCARTADA
+  FAVORITA
+
+  @@map("recommendation_status")
+}
+
+enum AnalyticsEventType {
+  VISITA_PUBLICACION
+  CONTACTO_VENDEDOR
+  FAVORITO_AGREGADO
+  BUSQUEDA
+  LOGIN
+  PUBLICACION_CREADA
+  VENTA
+
+  @@map("analytics_event_type")
 }
 
 model User {
-  id        String   @id @default(uuid())
-  name      String
-  email     String   @unique
-  password  String
-  role      UserRole @default(BUYER)
-  province  String
-  city      String
-  createdAt DateTime @default(now()) @db.Timestamp()
+  id              String        @id @default(uuid())
+  fullName        String        @map("full_name")
+  birthDate       DateTime      @map("birth_date") @db.Date()
+  phone           String
+  alternatePhone  String?       @map("alternate_phone")
+  role            UserRole      @default(BUYER)
+  accountStatus   AccountStatus @default(PENDING_VERIFICATION) @map("account_status")
+  createdAt       DateTime      @default(now()) @map("created_at") @db.Timestamp()
+  updatedAt       DateTime      @default(now()) @map("updated_at") @db.Timestamp()
+  lastLoginAt     DateTime?     @map("last_login_at") @db.Timestamp()
+  blockedAt       DateTime?     @map("blocked_at") @db.Timestamp()
+  blockedReason   String?       @map("blocked_reason")
+  suspiciousScore Decimal?      @map("suspicious_score") @db.Decimal(5, 2)
+  email           String        @unique
+  verified        Boolean       @default(false)
 
-  vehicles       Vehicle[]       @relation("SellerVehicles")
-  favorites     Favorite[]
-  messagesSent     Message[]       @relation("SenderMessages")
-  messagesReceived Message[]       @relation("ReceiverMessages")
-  userPreference  UserPreference?
+  password          String
+  passwordCreatedAt DateTime @default(now()) @map("password_created_at") @db.Timestamp()
+  failedAttempts    Int      @default(0) @map("failed_attempts")
+
+  sellerType     SellerType @default(PARTICULAR) @map("seller_type")
+  businessName   String?    @map("business_name")
+  taxId          String?    @map("tax_id")
+  contactEmail   String?    @map("contact_email")
+  contactPhone   String?    @map("contact_phone")
+  province       String?
+  city           String?
+  address        String?
+  acceptsTradeIn Boolean    @default(false) @map("accepts_trade_in")
+  sellerDescription String? @map("seller_description")
+  aiAutoReply    Boolean    @default(false) @map("ai_auto_reply")
+
+  publications         Publication[] @relation("SellerPublications")
+  reviewedPublications Publication[] @relation("ReviewedPublications")
+  favorites            Favorite[]
+  sentMessages         Message[]     @relation("SenderMessages")
+  preference           UserPreference?
+  salesAsBuyer         Sale[]        @relation("BuyerSales")
+  salesAsSeller        Sale[]        @relation("SellerSales")
+  alerts               Alert[]
+  recommendations      Recommendation[]
+  vehicleComparisons   VehicleComparison[]
+  analyticsEvents      AnalyticsEvent[]
+  aiAnalyses           AiAnalysis[]  @relation("AiAnalysisRequestedBy")
+
+  @@map("users")
 }
 
 model Vehicle {
-  id                String   @id @default(uuid())
-  vehicleType       VehicleType
-  brand             String
-  model             String
-  year              Int
-  color             String?
-  fuelType          FuelType?
-  transmission      Transmission?
-  mileage           Int?
-  price             Float?
-  province          String?
-  city              String?
-  latitude          Float?
-  longitude         Float?
-  lastServiceDate   DateTime? @db.Date()
-  lastOilChange     DateTime? @db.Date()
-  accidents         String?
-  interiorCondition Int?
-  paintCondition    Int?
-  rimsCondition     Int?
-  dashboardCondition Int?
-  tiresCondition    Int?
-  description       String?
-  createdAt         DateTime @default(now()) @db.Timestamp()
+  id              String        @id @default(uuid())
+  model           String
+  brand           String
+  version         String?
+  year            Int
+  fuelType        FuelType?     @map("fuel_type")
+  transmission    Transmission?
+  color           String?
+  doors           Int?
+  engine          String?
+  kilometers      Int?
+  accidents       String?
+  ownerCount      Int?          @map("owner_count")
+  hasDebtOrTaxes  Boolean?      @map("has_debt_or_taxes")
+  debtOrTaxesNote String?       @map("debt_or_taxes_note")
+  createdAt       DateTime      @default(now()) @map("created_at") @db.Timestamp()
+  updatedAt       DateTime      @default(now()) @map("updated_at") @db.Timestamp()
 
-  sellerId String
-  seller   User   @relation("SellerVehicles", fields: [sellerId], references: [id])
+  analyticState AnalyticState?
+  images        VehicleImage[]
+  publications  Publication[]
+  aiAnalyses    AiAnalysis[]
 
-  images      VehicleImage[]
-  favorites   Favorite[]
-  messages    Message[]
-  aiAnalysis  AiAnalysis?
+  @@index([brand, model, year])
+  @@map("vehicles")
+}
+
+model AnalyticState {
+  id                    String @id @default(uuid())
+  paintCondition        Int?   @map("paint_condition")
+  engineCondition       Int?   @map("engine_condition")
+  interiorCondition     Int?   @map("interior_condition")
+  tiresCondition        Int?   @map("tires_condition")
+  rimsCondition         Int?   @map("rims_condition")
+  suspensionCondition   Int?   @map("suspension_condition")
+  transmissionCondition Int?   @map("transmission_condition")
+  lightsCondition       Int?   @map("lights_condition")
+
+  vehicleId String  @unique @map("vehicle_id")
+  vehicle   Vehicle @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+
+  @@map("analytic_states")
 }
 
 model VehicleImage {
-  id        String   @id @default(uuid())
-  url       String
-  title     String?
-  createdAt DateTime @default(now()) @db.Timestamp()
+  id             String   @id @default(uuid())
+  url            String
+  name           String?
+  sortOrder      Int      @default(0) @map("sort_order")
+  aiQualityScore Decimal? @map("ai_quality_score") @db.Decimal(5, 2)
+  aiSuggestion   String?  @map("ai_suggestion")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamp()
 
-  vehicleId String
-  vehicle   Vehicle  @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  vehicleId String  @map("vehicle_id")
+  vehicle   Vehicle @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+
+  @@index([vehicleId])
+  @@map("vehicle_images")
 }
 
-model Message {
+model Publication {
+  id          String            @id @default(uuid())
+  title       String?
+  description String?
+  price       Decimal           @db.Decimal(12, 2)
+  currency    Currency          @default(ARS)
+  city        String
+  province    String
+  status      PublicationStatus @default(A_LA_VENTA)
+  moderationStatus ModerationStatus @default(PENDIENTE) @map("moderation_status")
+  rejectionReason  String?      @map("rejection_reason")
+  aiScore          Decimal?     @map("ai_score") @db.Decimal(5, 2)
+  viewsCount       Int          @default(0) @map("views_count")
+  contactCount     Int          @default(0) @map("contact_count")
+  favoriteCount    Int          @default(0) @map("favorite_count")
+  publishedAt      DateTime     @default(now()) @map("published_at") @db.Timestamp()
+  updatedAt        DateTime     @default(now()) @map("updated_at") @db.Timestamp()
+  reviewedAt       DateTime?    @map("reviewed_at") @db.Timestamp()
+
+  vehicleId String  @map("vehicle_id")
+  vehicle   Vehicle @relation(fields: [vehicleId], references: [id])
+
+  sellerId String @map("seller_id")
+  seller   User   @relation("SellerPublications", fields: [sellerId], references: [id])
+
+  reviewedById String? @map("reviewed_by_id")
+  reviewedBy   User?   @relation("ReviewedPublications", fields: [reviewedById], references: [id])
+
+  currentPriceHistoryId String?       @unique @map("current_price_history_id")
+  currentPriceHistory   PriceHistory? @relation("CurrentPublicationPrice", fields: [currentPriceHistoryId], references: [id])
+
+  priceHistory    PriceHistory[] @relation("PublicationPriceHistory")
+  favorites       Favorite[]
+  messages        Message[]
+  sales           Sale[]
+  aiAnalyses      AiAnalysis[]
+  recommendations Recommendation[]
+  analyticsEvents AnalyticsEvent[]
+  alerts          Alert[]
+
+  @@index([status, moderationStatus])
+  @@index([province, city])
+  @@index([price])
+  @@map("publications")
+}
+
+model PriceHistory {
   id        String   @id @default(uuid())
-  message   String
-  createdAt DateTime @default(now()) @db.Timestamp()
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamp()
+  amount    Decimal  @db.Decimal(12, 2)
+  currency  Currency @default(ARS)
 
-  vehicleId String
-  vehicle   Vehicle  @relation(fields: [vehicleId], references: [id])
+  publicationId String @map("publication_id")
+  publication   Publication @relation("PublicationPriceHistory", fields: [publicationId], references: [id], onDelete: Cascade)
 
-  senderId   String
-  sender     User    @relation("SenderMessages", fields: [senderId], references: [id])
+  currentForPublication Publication? @relation("CurrentPublicationPrice")
 
-  receiverId String
-  receiver   User    @relation("ReceiverMessages", fields: [receiverId], references: [id])
+  @@index([publicationId])
+  @@map("price_history")
 }
 
 model Favorite {
   id        String   @id @default(uuid())
-  createdAt DateTime @default(now()) @db.Timestamp()
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamp()
 
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
+  userId String @map("user_id")
+  user   User   @relation(fields: [userId], references: [id])
 
-  vehicleId String
-  vehicle   Vehicle  @relation(fields: [vehicleId], references: [id])
+  publicationId String @map("publication_id")
+  publication   Publication @relation(fields: [publicationId], references: [id], onDelete: Cascade)
 
-  @@unique([userId, vehicleId])
+  @@unique([userId, publicationId])
+  @@index([userId])
+  @@map("favorites")
+}
+
+model Message {
+  id            String        @id @default(uuid())
+  chatId        String        @map("chat_id") @db.Uuid
+  buyerId       String        @map("buyer_id") @db.Uuid
+  sellerId      String        @map("seller_id") @db.Uuid
+  message       String
+  createdAt     DateTime      @default(now()) @map("created_at") @db.Timestamp()
+  readAt        DateTime?     @map("read_at") @db.Timestamp()
+  status        MessageStatus @default(ENVIADO)
+  leadStatus    LeadStatus    @default(NUEVO) @map("lead_status")
+  lastMessageAt DateTime?     @map("last_message_at") @db.Timestamp()
+
+  publicationId String?      @map("publication_id")
+  publication   Publication? @relation(fields: [publicationId], references: [id])
+
+  userId String @map("user_id")
+  user   User   @relation("SenderMessages", fields: [userId], references: [id])
+
+  @@index([chatId, createdAt])
+  @@index([buyerId])
+  @@index([sellerId])
+  @@index([publicationId])
+  @@map("messages")
 }
 
 model UserPreference {
-  id            String   @id @default(uuid())
-  yearRange     Int[]    @default([])
-  mileageRange  Int[]    @default([])
-  colorRange    String[] @default([])
-  interiorRange Int[]    @default([])
-  paintRange    Int[]    @default([])
-  rimsRange     Int[]    @default([])
-  dashboardRange Int[]   @default([])
-  tiresRange    Int[]    @default([])
-  fuelTypes     FuelType[] @default([])
-  vehicleTypes  VehicleType[] @default([])
-  brands        String[] @default([])
-  models        String[] @default([])
+  id             String   @id @default(uuid())
+  minBudget      Decimal? @map("min_budget") @db.Decimal(12, 2)
+  maxBudget      Decimal? @map("max_budget") @db.Decimal(12, 2)
+  preferredBrand String?  @map("preferred_brand")
+  preferredModel String?  @map("preferred_model")
+  yearFrom       Int?     @map("year_from")
+  yearTo         Int?     @map("year_to")
+  fuelTypes      FuelType[] @default([]) @map("fuel_types")
+  transmissions  Transmission[] @default([])
+  provinces      String[] @default([])
+  alertEnabled   Boolean  @default(true) @map("alert_enabled")
 
-  userId String @unique
-  user   User   @relation(fields: [userId], references: [id])
+  userId String @unique @map("user_id")
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_preferences")
+}
+
+model Sale {
+  id         String     @id @default(uuid())
+  finalPrice Decimal    @map("final_price") @db.Decimal(12, 2)
+  currency   Currency   @default(ARS)
+  status     SaleStatus @default(PENDIENTE)
+  soldAt     DateTime?  @map("sold_at") @db.Timestamp()
+  createdAt  DateTime   @default(now()) @map("created_at") @db.Timestamp()
+
+  publicationId String      @map("publication_id")
+  publication   Publication @relation(fields: [publicationId], references: [id])
+
+  buyerId String? @map("buyer_id")
+  buyer   User?   @relation("BuyerSales", fields: [buyerId], references: [id])
+
+  sellerId String @map("seller_id")
+  seller   User   @relation("SellerSales", fields: [sellerId], references: [id])
+
+  @@index([sellerId, status])
+  @@map("sales")
 }
 
 model AiAnalysis {
-  id             String   @id @default(uuid())
-  condition      String
-  estimatedPrice Float?
-  damageReport   String?
-  confidence     Float?
-  createdAt      DateTime @default(now()) @db.Timestamp()
+  id                   String         @id @default(uuid())
+  type                 AiAnalysisType
+  fairPrice            Decimal?       @map("fair_price") @db.Decimal(12, 2)
+  estimatedPrice       Decimal?       @map("estimated_price") @db.Decimal(12, 2)
+  depreciationEstimate Decimal?       @map("depreciation_estimate") @db.Decimal(12, 2)
+  marketDeltaPercent   Decimal?       @map("market_delta_percent") @db.Decimal(6, 2)
+  riskScore            Decimal?       @map("risk_score") @db.Decimal(5, 2)
+  opportunityScore     Decimal?       @map("opportunity_score") @db.Decimal(5, 2)
+  confidence           Decimal?       @db.Decimal(5, 2)
+  summary              String?
+  damageReport         String?        @map("damage_report")
+  suggestions          String?
+  metadata             Json?
+  createdAt            DateTime       @default(now()) @map("created_at") @db.Timestamp()
 
-  vehicleId String @unique
-  vehicle   Vehicle @relation(fields: [vehicleId], references: [id])
+  vehicleId String?  @map("vehicle_id")
+  vehicle   Vehicle? @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+
+  publicationId String?      @map("publication_id")
+  publication   Publication? @relation(fields: [publicationId], references: [id], onDelete: Cascade)
+
+  requestedById String? @map("requested_by_id")
+  requestedBy   User?   @relation("AiAnalysisRequestedBy", fields: [requestedById], references: [id])
+
+  @@index([vehicleId])
+  @@index([publicationId])
+  @@map("ai_analyses")
+}
+
+model Recommendation {
+  id        String               @id @default(uuid())
+  score     Decimal              @db.Decimal(5, 2)
+  reason    String?
+  status    RecommendationStatus @default(PENDIENTE)
+  createdAt DateTime             @default(now()) @map("created_at") @db.Timestamp()
+
+  userId String @map("user_id")
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  publicationId String      @map("publication_id")
+  publication   Publication @relation(fields: [publicationId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, publicationId])
+  @@index([userId, score])
+  @@map("recommendations")
+}
+
+model VehicleComparison {
+  id             String   @id @default(uuid())
+  name           String?
+  publicationIds String[] @default([]) @map("publication_ids") @db.Uuid
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamp()
+
+  userId String @map("user_id")
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("vehicle_comparisons")
+}
+
+model Alert {
+  id         String        @id @default(uuid())
+  type       AlertType
+  severity   AlertSeverity @default(MEDIA)
+  status     AlertStatus   @default(ABIERTA)
+  title      String
+  message    String?
+  metadata   Json?
+  createdAt  DateTime      @default(now()) @map("created_at") @db.Timestamp()
+  readAt     DateTime?     @map("read_at") @db.Timestamp()
+  resolvedAt DateTime?     @map("resolved_at") @db.Timestamp()
+
+  userId String? @map("user_id")
+  user   User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  publicationId String?      @map("publication_id")
+  publication   Publication? @relation(fields: [publicationId], references: [id], onDelete: SetNull)
+
+  @@index([status, severity])
+  @@index([userId])
+  @@map("alerts")
+}
+
+model AnalyticsEvent {
+  id        String             @id @default(uuid())
+  eventType AnalyticsEventType @map("event_type")
+  metadata  Json?
+  createdAt DateTime           @default(now()) @map("created_at") @db.Timestamp()
+
+  userId String? @map("user_id")
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  publicationId String?      @map("publication_id")
+  publication   Publication? @relation(fields: [publicationId], references: [id], onDelete: SetNull)
+
+  @@index([eventType, createdAt])
+  @@map("analytics_events")
 }

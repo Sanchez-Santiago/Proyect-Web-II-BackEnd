@@ -1,12 +1,11 @@
 import { z } from 'zod';
 
 export const CreateFavoriteDto = z.object({
-  vehicleId: z.string().uuid(),
+  publicationId: z.string().uuid(),
 });
 
 export const FavoriteFiltersDto = z.object({
   brand: z.string().optional(),
-  vehicleType: z.enum(['SEDAN', 'SUV', 'TRUCK', 'COUPE', 'HATCHBACK', 'VAN', 'WAGON', 'CONVERTIBLE', 'SPORTS', 'ELECTRIC', 'OTHER']).optional(),
   priceMin: z.number().positive().optional(),
   priceMax: z.number().positive().optional(),
   from: z.string().datetime().optional(),

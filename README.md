@@ -78,6 +78,8 @@ src/
 POST /auth/register
 {
   "name": "Juan Pérez",
+  "birthDate": "1995-04-20",
+  "phone": "3515551234",
   "email": "juan@email.com",
   "password": "Password123",
   "role": "BUYER"
@@ -101,6 +103,22 @@ POST /auth/login
   "user": {
     "id": "uuid",
     "name": "Juan Pérez",
+    "email": "juan@email.com",
+    "role": "BUYER"
+  }
+}
+```
+
+### Respuesta de Registro
+```json
+{
+  "message": "Usuario registrado exitosamente",
+  "token": "eyJhbGciOiJIUzI1NiIs...",
+  "user": {
+    "id": "uuid",
+    "fullName": "Juan Pérez",
+    "birthDate": "1995-04-20T00:00:00.000Z",
+    "phone": "3515551234",
     "email": "juan@email.com",
     "role": "BUYER"
   }

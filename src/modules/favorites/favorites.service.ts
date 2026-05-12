@@ -1,24 +1,21 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
-import { FavoriteModel, VehicleModel } from '../../model/prisma.model';
+import { FavoriteModel } from '../../model/prisma.model';
 import { CreateFavoriteInput, FavoriteFiltersInput } from './dto/favorite.dto';
 
 @Injectable()
 export class FavoritesService {
   async add(userId: string, input: CreateFavoriteInput) {
-    const vehicle = await VehicleModel.findById(input.vehicleId);
-    if (!vehicle) throw new NotFoundException('Vehículo no encontrado');
+    const existing = await FavoriteModel.isFavorite(userId, input.publicationId);
+    if (existing) throw new BadRequestException('La publicación ya está en favoritos');
 
-    const existing = await FavoriteModel.isFavorite(userId, input.vehicleId);
-    if (existing) throw new BadRequestException('El vehículo ya está en favoritos');
-
-    return FavoriteModel.create({ userId, vehicleId: input.vehicleId });
+    return FavoriteModel.create({ userId, publicationId: input.publicationId });
   }
 
-  async remove(userId: string, vehicleId: string) {
-    const existing = await FavoriteModel.isFavorite(userId, vehicleId);
-    if (!existing) throw new NotFoundException('El vehículo no está en favoritos');
+  async remove(userId: string, publicationId: string) {
+    const existing = await FavoriteModel.isFavorite(userId, publicationId);
+    if (!existing) throw new NotFoundException('La publicación no está en favoritos');
 
-    await FavoriteModel.delete(userId, vehicleId);
+    await FavoriteModel.delete(userId, publicationId);
     return { message: 'Favorito eliminado correctamente' };
   }
 
@@ -26,7 +23,6 @@ export class FavoritesService {
     const processedFilters = filters
       ? {
           brand: filters.brand,
-          vehicleType: filters.vehicleType,
           priceMin: filters.priceMin,
           priceMax: filters.priceMax,
           from: filters.from ? new Date(filters.from) : undefined,
@@ -37,8 +33,8 @@ export class FavoritesService {
     return FavoriteModel.findByUserId(userId, processedFilters);
   }
 
-  async checkFavorite(userId: string, vehicleId: string) {
-    const isFavorite = await FavoriteModel.isFavorite(userId, vehicleId);
+  async checkFavorite(userId: string, publicationId: string) {
+    const isFavorite = await FavoriteModel.isFavorite(userId, publicationId);
     return { isFavorite };
   }
 }

@@ -1,19 +1,20 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { MessageModel } from '../../model/prisma.model';
 import { CreateMessageInput, MessageFiltersInput } from './dto/message.dto';
 
 @Injectable()
 export class MessagesService {
   async create(senderId: string, input: CreateMessageInput) {
-    if (senderId === input.receiverId) {
-      throw new BadRequestException('No puedes enviarte mensajes a ti mismo');
-    }
-
     return MessageModel.create({
-      senderId,
-      vehicleId: input.vehicleId,
-      receiverId: input.receiverId,
+      userId: senderId,
+      chatId: input.chatId,
+      buyerId: input.buyerId,
+      sellerId: input.sellerId,
+      publicationId: input.publicationId,
       message: input.message,
+      status: input.status,
+      leadStatus: input.leadStatus,
+      lastMessageAt: new Date(),
     });
   }
 
@@ -23,15 +24,14 @@ export class MessagesService {
     return message;
   }
 
-  async findByVehicleId(vehicleId: string, filters?: { from?: Date; to?: Date; senderId?: string; receiverId?: string }) {
+  async findByChatId(chatId: string, filters?: { from?: Date; to?: Date; userId?: string }) {
     const processedFilters = filters ? {
       from: filters.from ? new Date(filters.from) : undefined,
       to: filters.to ? new Date(filters.to) : undefined,
-      senderId: filters.senderId,
-      receiverId: filters.receiverId,
+      userId: filters.userId,
     } : undefined;
 
-    return MessageModel.findByVehicleId(vehicleId, processedFilters);
+    return MessageModel.findByChatId(chatId, processedFilters);
   }
 
   async getConversations(userId: string) {

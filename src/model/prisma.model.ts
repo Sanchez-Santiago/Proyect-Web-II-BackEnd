@@ -15,7 +15,7 @@ export const VehicleModel = {
   async findById(id: string) {
     return prisma.vehicle.findUnique({
       where: { id },
-      include: { images: true, seller: true, aiAnalysis: true },
+      include: { images: true, analyticState: true, publications: { include: { seller: true, priceHistory: true } } },
     });
   },
 
@@ -27,17 +27,14 @@ export const VehicleModel = {
     yearMax?: number;
     priceMin?: number;
     priceMax?: number;
-    vehicleType?: string;
     fuelType?: string;
     transmission?: string;
-    mileageMin?: number;
-    mileageMax?: number;
+    kilometersMin?: number;
+    kilometersMax?: number;
     province?: string;
     city?: string;
     interiorConditionMin?: number;
     paintConditionMin?: number;
-    createdAtFrom?: Date;
-    createdAtTo?: Date;
     sellerId?: string;
   }) {
     const where: any = {};
@@ -51,33 +48,33 @@ export const VehicleModel = {
       if (filters.yearMax) where.year.lte = filters.yearMax;
     }
     if (filters.priceMin || filters.priceMax) {
-      where.price = {};
-      if (filters.priceMin) where.price.gte = filters.priceMin;
-      if (filters.priceMax) where.price.lte = filters.priceMax;
+      where.publications = { some: { price: {} } };
+      if (filters.priceMin) where.publications.some.price.gte = filters.priceMin;
+      if (filters.priceMax) where.publications.some.price.lte = filters.priceMax;
     }
-    if (filters.vehicleType) where.vehicleType = filters.vehicleType;
     if (filters.fuelType) where.fuelType = filters.fuelType;
     if (filters.transmission) where.transmission = filters.transmission;
-    if (filters.mileageMin || filters.mileageMax) {
-      where.mileage = {};
-      if (filters.mileageMin) where.mileage.gte = filters.mileageMin;
-      if (filters.mileageMax) where.mileage.lte = filters.mileageMax;
+    if (filters.kilometersMin || filters.kilometersMax) {
+      where.kilometers = {};
+      if (filters.kilometersMin) where.kilometers.gte = filters.kilometersMin;
+      if (filters.kilometersMax) where.kilometers.lte = filters.kilometersMax;
     }
-    if (filters.province) where.province = filters.province;
-    if (filters.city) where.city = filters.city;
-    if (filters.sellerId) where.sellerId = filters.sellerId;
-    if (filters.interiorConditionMin) where.interiorCondition = { gte: filters.interiorConditionMin };
-    if (filters.paintConditionMin) where.paintCondition = { gte: filters.paintConditionMin };
-    if (filters.createdAtFrom || filters.createdAtTo) {
-      where.createdAt = {};
-      if (filters.createdAtFrom) where.createdAt.gte = filters.createdAtFrom;
-      if (filters.createdAtTo) where.createdAt.lte = filters.createdAtTo;
+    if (filters.province || filters.city || filters.sellerId) {
+      where.publications = where.publications || { some: {} };
+      if (filters.province) where.publications.some.province = filters.province;
+      if (filters.city) where.publications.some.city = filters.city;
+      if (filters.sellerId) where.publications.some.sellerId = filters.sellerId;
+    }
+    if (filters.interiorConditionMin || filters.paintConditionMin) {
+      where.analyticState = {};
+      if (filters.interiorConditionMin) where.analyticState.interiorCondition = { gte: filters.interiorConditionMin };
+      if (filters.paintConditionMin) where.analyticState.paintCondition = { gte: filters.paintConditionMin };
     }
 
     return prisma.vehicle.findMany({
       where,
-      include: { images: true, seller: { select: { id: true, name: true, email: true, province: true, city: true } }, aiAnalysis: true },
-      orderBy: { createdAt: 'desc' },
+      include: { images: true, analyticState: true, publications: { include: { seller: { select: { id: true, fullName: true, email: true } }, priceHistory: true } } },
+      orderBy: { year: 'desc' },
     });
   },
 
@@ -112,76 +109,103 @@ export const VehicleImageModel = {
   },
 };
 
+export const PublicationModel = {
+  async create(sellerId: string, data: any) {
+    const { currency, ...publicationData } = data;
+    return prisma.publication.create({
+      data: {
+        ...publicationData,
+        currency: currency || 'ARS',
+        sellerId,
+        priceHistory: {
+          create: {
+            amount: publicationData.price,
+            currency: currency || 'ARS',
+          },
+        },
+      },
+      include: { vehicle: { include: { images: true, analyticState: true } }, seller: true, priceHistory: true },
+    });
+  },
+
+  async findById(id: string) {
+    return prisma.publication.findUnique({
+      where: { id },
+      include: { vehicle: { include: { images: true, analyticState: true } }, seller: true, priceHistory: true, favorites: true },
+    });
+  },
+
+  async update(id: string, data: any) {
+    const { currency, price, ...publicationData } = data;
+    return prisma.publication.update({
+      where: { id },
+      data: {
+        ...publicationData,
+        ...(price
+          ? {
+              price,
+              priceHistory: {
+                create: {
+                  amount: price,
+                  currency: currency || 'ARS',
+                },
+              },
+            }
+          : {}),
+      },
+      include: { vehicle: { include: { images: true, analyticState: true } }, seller: true, priceHistory: true },
+    });
+  },
+
+  async delete(id: string) {
+    return prisma.publication.delete({ where: { id } });
+  },
+};
+
 export const MessageModel = {
   async create(data: any) {
     return prisma.message.create({
       data,
-      include: { sender: { select: { id: true, name: true, email: true } }, receiver: { select: { id: true, name: true, email: true } }, vehicle: true },
+      include: { user: { select: { id: true, fullName: true, email: true } }, publication: true },
     });
   },
 
   async findById(id: string) {
     return prisma.message.findUnique({
       where: { id },
-      include: { sender: { select: { id: true, name: true, email: true } }, receiver: { select: { id: true, name: true, email: true } }, vehicle: true },
+      include: { user: { select: { id: true, fullName: true, email: true } }, publication: true },
     });
   },
 
-  async findByVehicleId(vehicleId: string, filters?: { from?: Date; to?: Date; senderId?: string; receiverId?: string }) {
-    const where: any = { vehicleId };
+  async findByChatId(chatId: string, filters?: { from?: Date; to?: Date; userId?: string }) {
+    const where: any = { chatId };
     if (filters?.from || filters?.to) {
       where.createdAt = {};
       if (filters.from) where.createdAt.gte = filters.from;
       if (filters.to) where.createdAt.lte = filters.to;
     }
-    if (filters?.senderId) where.senderId = filters.senderId;
-    if (filters?.receiverId) where.receiverId = filters.receiverId;
+    if (filters?.userId) where.userId = filters.userId;
 
     return prisma.message.findMany({
       where,
-      include: { sender: { select: { id: true, name: true, email: true } }, receiver: { select: { id: true, name: true, email: true } }, vehicle: true },
+      include: { user: { select: { id: true, fullName: true, email: true } }, publication: true },
       orderBy: { createdAt: 'desc' },
     });
   },
 
   async getConversations(userId: string) {
-    const sent = await prisma.message.findMany({
-      where: { senderId: userId },
-      include: { vehicle: true, receiver: { select: { id: true, name: true, email: true } } },
+    return prisma.message.findMany({
+      where: { OR: [{ buyerId: userId }, { sellerId: userId }] },
+      include: { user: { select: { id: true, fullName: true, email: true } }, publication: true },
       orderBy: { createdAt: 'desc' },
-      distinct: ['vehicleId', 'receiverId'],
+      distinct: ['chatId'],
     });
-
-    const received = await prisma.message.findMany({
-      where: { receiverId: userId },
-      include: { vehicle: true, sender: { select: { id: true, name: true, email: true } } },
-      orderBy: { createdAt: 'desc' },
-      distinct: ['vehicleId', 'senderId'],
-    });
-
-    const conversationMap = new Map();
-
-    for (const msg of [...sent, ...received]) {
-      const key = `${msg.vehicleId}-${msg.senderId === userId ? msg.receiverId : msg.senderId}`;
-      if (!conversationMap.has(key)) {
-        conversationMap.set(key, {
-          vehicleId: msg.vehicleId,
-          vehicle: msg.vehicle,
-          otherUser: msg.senderId === userId ? (msg as any).receiver : (msg as any).sender,
-          lastMessage: msg.message,
-          lastMessageAt: msg.createdAt,
-          unreadCount: msg.receiverId === userId ? 1 : 0,
-        });
-      }
-    }
-
-    return Array.from(conversationMap.values()).sort((a: any, b: any) => b.lastMessageAt.getTime() - a.lastMessageAt.getTime());
   },
 
   async findAll(filters: { userId?: string; from?: Date; to?: Date }) {
     const where: any = {};
     if (filters.userId) {
-      where.OR = [{ senderId: filters.userId }, { receiverId: filters.userId }];
+      where.userId = filters.userId;
     }
     if (filters.from || filters.to) {
       where.createdAt = {};
@@ -191,7 +215,7 @@ export const MessageModel = {
 
     return prisma.message.findMany({
       where,
-      include: { sender: { select: { id: true, name: true, email: true } }, receiver: { select: { id: true, name: true, email: true } }, vehicle: true },
+      include: { user: { select: { id: true, fullName: true, email: true } }, publication: true },
       orderBy: { createdAt: 'desc' },
     });
   },
@@ -202,28 +226,27 @@ export const FavoriteModel = {
     return prisma.favorite.create({ data });
   },
 
-  async delete(userId: string, vehicleId: string) {
+  async delete(userId: string, publicationId: string) {
     return prisma.favorite.deleteMany({
-      where: { userId, vehicleId },
+      where: { userId, publicationId },
     });
   },
 
-  async findByUserId(userId: string, filters?: { brand?: string; from?: Date; to?: Date; priceMin?: number; priceMax?: number; vehicleType?: string }) {
+  async findByUserId(userId: string, filters?: { brand?: string; from?: Date; to?: Date; priceMin?: number; priceMax?: number }) {
     const where: any = { userId };
-    if (filters?.brand || filters?.priceMin || filters?.priceMax || filters?.vehicleType) {
-      where.vehicle = {};
-      if (filters.brand) where.vehicle.brand = filters.brand;
-      if (filters.vehicleType) where.vehicle.vehicleType = filters.vehicleType;
+    if (filters?.brand || filters?.priceMin || filters?.priceMax) {
+      where.publication = {};
+      if (filters.brand) where.publication.vehicle = { brand: filters.brand };
       if (filters.priceMin || filters.priceMax) {
-        where.vehicle.price = {};
-        if (filters.priceMin) where.vehicle.price.gte = filters.priceMin;
-        if (filters.priceMax) where.vehicle.price.lte = filters.priceMax;
+        where.publication.price = {};
+        if (filters.priceMin) where.publication.price.gte = filters.priceMin;
+        if (filters.priceMax) where.publication.price.lte = filters.priceMax;
       }
     }
 
     const favorites = await prisma.favorite.findMany({
       where,
-      include: { vehicle: { include: { images: true, seller: { select: { id: true, name: true, email: true } } } } },
+      include: { publication: { include: { vehicle: { include: { images: true } }, seller: { select: { id: true, fullName: true, email: true } } } } },
       orderBy: { createdAt: 'desc' },
     });
 
@@ -240,13 +263,13 @@ export const FavoriteModel = {
     return result;
   },
 
-  async findByVehicleId(vehicleId: string) {
-    return prisma.favorite.findMany({ where: { vehicleId } });
+  async findByVehicleId(publicationId: string) {
+    return prisma.favorite.findMany({ where: { publicationId } });
   },
 
-  async isFavorite(userId: string, vehicleId: string) {
+  async isFavorite(userId: string, publicationId: string) {
     const favorite = await prisma.favorite.findUnique({
-      where: { userId_vehicleId: { userId, vehicleId } },
+      where: { userId_publicationId: { userId, publicationId } },
     });
     return !!favorite;
   },
@@ -280,7 +303,7 @@ export const AiAnalysisModel = {
   },
 
   async findByVehicleId(vehicleId: string) {
-    return prisma.aiAnalysis.findUnique({ where: { vehicleId } });
+    return prisma.aiAnalysis.findFirst({ where: { vehicleId } });
   },
 
   async update(id: string, data: any) {

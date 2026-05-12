@@ -20,19 +20,18 @@ export class MessagesController {
     return { conversations };
   }
 
-  @Get('vehicle/:vehicleId')
-  async findByVehicleId(
-    @Param('vehicleId') vehicleId: string,
+  @Get('chat/:chatId')
+  async findByChatId(
+    @Param('chatId') chatId: string,
     @Query('from') from?: string,
     @Query('to') to?: string,
-    @Query('senderId') senderId?: string,
-    @Query('receiverId') receiverId?: string,
+    @Query('userId') userId?: string,
   ) {
-    const filters = from || to || senderId || receiverId
-      ? { from: from ? new Date(from) : undefined, to: to ? new Date(to) : undefined, senderId, receiverId }
+    const filters = from || to || userId
+      ? { from: from ? new Date(from) : undefined, to: to ? new Date(to) : undefined, userId }
       : undefined;
 
-    const messages = await this.messagesService.findByVehicleId(vehicleId, filters);
+    const messages = await this.messagesService.findByChatId(chatId, filters);
     return { messages };
   }
 
