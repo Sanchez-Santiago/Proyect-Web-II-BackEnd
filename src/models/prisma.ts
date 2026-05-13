@@ -1,6 +1,9 @@
 import 'dotenv/config';
+import dns from 'node:dns';
 import { PrismaClient } from '../../generated/prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
+
+dns.setDefaultResultOrder('ipv4first');
 
 const adapter = new PrismaPg({
   connectionString: process.env.DATABASE_URL!,
