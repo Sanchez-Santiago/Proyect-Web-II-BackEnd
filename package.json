@@ -13,10 +13,10 @@
   "license": "ISC",
   "author": "Santiago Javier Sanchez, Giuliano Ayrton Pucci",
   "type": "commonjs",
-  "main": "dist/src/main.js",
+  "main": "dist/main.js",
   "scripts": {
     "build": "npx prisma generate && npx nest build",
-    "start": "node dist/src/main.js",
+    "start": "node dist/main.js",
     "start:dev": "npx nest start --watch",
     "prisma:generate": "prisma generate --schema=prisma/schema.prisma",
     "prisma:push": "prisma db push --schema=prisma/schema.prisma",
