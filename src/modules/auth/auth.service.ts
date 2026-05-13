@@ -4,7 +4,7 @@ import { UserModel } from '../../models/user.model';
 import { RefreshTokenService } from './services/refresh-token.service';
 import { PasswordService } from './services/password.service';
 import { hashPassword, comparePassword } from '../../common/utils/hash.util';
-import { UserRole } from '../../../generated/prisma/client';
+import { UserRole } from '@prisma/client';
 
 @Injectable()
 export class AuthService {

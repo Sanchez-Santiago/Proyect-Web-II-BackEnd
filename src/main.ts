@@ -3,9 +3,12 @@ import 'reflect-metadata';
 import { AppModule } from './app.module';
 import 'dotenv/config';
 import { json } from 'express';
+import { AllExceptionsFilter } from './common/filters/http-exception.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  app.useGlobalFilters(new AllExceptionsFilter());
 
   const corsOrigins = process.env.CORS_ORIGINS?.split(',').map(o => o.trim()) || ['http://localhost:5173', 'http://localhost:8000', 'http://127.0.0.1:8000'];
   app.enableCors({

@@ -1,5 +1,5 @@
 import { prisma } from './prisma';
-import { Prisma, VehicleType, FuelType, Transmission } from '../../generated/prisma/client';
+import { Prisma, VehicleType, FuelType, Transmission } from '@prisma/client';
 
 export const VehicleModel = {
   async create(data: Prisma.VehicleCreateInput) {

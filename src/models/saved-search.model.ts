@@ -1,5 +1,5 @@
 import { prisma } from './prisma';
-import { Prisma } from '../../generated/prisma/client';
+import { Prisma } from '@prisma/client';
 
 export const SavedSearchModel = {
   async create(userId: string, filtersJson: Prisma.JsonObject) {

@@ -1,5 +1,5 @@
 import { prisma } from './prisma';
-import { Prisma } from '../../generated/prisma/client';
+import { Prisma } from '@prisma/client';
 
 export const NotificationModel = {
   async create(data: Prisma.NotificationCreateInput) {

@@ -1,5 +1,5 @@
 import { prisma } from './prisma';
-import { PublicationStatus } from '../../generated/prisma/client';
+import { PublicationStatus } from '@prisma/client';
 
 export const PublicationStatusHistoryModel = {
   async create(publicationId: string, oldStatus: PublicationStatus | null, newStatus: PublicationStatus) {

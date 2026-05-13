@@ -18,7 +18,7 @@
     "seed": "tsx prisma/seed.ts"
   },
   "scripts": {
-    "build": "npx nest build",
+    "build": "npx prisma generate && npx nest build",
     "start": "node dist/src/main.js",
     "start:dev": "npx nest start --watch",
     "prisma:generate": "prisma generate --schema=prisma/schema.prisma",

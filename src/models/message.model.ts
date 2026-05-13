@@ -1,5 +1,5 @@
 import { prisma } from './prisma';
-import { Prisma, MessageStatus } from '../../generated/prisma/client';
+import { Prisma, MessageStatus } from '@prisma/client';
 
 export const MessageModel = {
   async create(data: Prisma.MessageCreateInput) {

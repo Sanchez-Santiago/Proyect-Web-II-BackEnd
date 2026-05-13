@@ -1,5 +1,5 @@
 import { prisma } from './prisma';
-import { Prisma } from '../../generated/prisma/client';
+import { Prisma } from '@prisma/client';
 
 export const VehicleImageModel = {
   async create(data: Prisma.VehicleImageCreateInput) {

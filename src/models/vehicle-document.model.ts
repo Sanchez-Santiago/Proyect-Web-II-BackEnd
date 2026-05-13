@@ -1,5 +1,5 @@
 import { prisma } from './prisma';
-import { Prisma } from '../../generated/prisma/client';
+import { Prisma } from '@prisma/client';
 
 export const VehicleDocumentModel = {
   async create(data: Prisma.VehicleDocumentCreateInput) {

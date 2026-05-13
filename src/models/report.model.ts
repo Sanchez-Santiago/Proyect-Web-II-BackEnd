@@ -1,5 +1,5 @@
 import { prisma } from './prisma';
-import { Prisma, ReportStatus } from '../../generated/prisma/client';
+import { Prisma, ReportStatus } from '@prisma/client';
 
 export const ReportModel = {
   async create(data: Prisma.ReportCreateInput) {
