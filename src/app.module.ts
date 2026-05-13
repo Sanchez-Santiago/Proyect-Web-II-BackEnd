@@ -14,7 +14,7 @@ import { VehicleFeaturesModule } from './modules/vehicle-features/vehicle-featur
 import { VehicleViewsModule } from './modules/vehicle-views/vehicle-views.module';
 import { SavedSearchesModule } from './modules/saved-searches/saved-searches.module';
 import { DocumentsModule } from './modules/documents/documents.module';
-import { AdminModule } from './modules/admin/admin.module';
+import { GeminiModule } from './modules/gemini/gemini.module';
 
 @Module({
   imports: [
@@ -33,7 +33,7 @@ import { AdminModule } from './modules/admin/admin.module';
     VehicleViewsModule,
     SavedSearchesModule,
     DocumentsModule,
-    AdminModule,
+    GeminiModule,
   ],
   controllers: [],
   providers: [],

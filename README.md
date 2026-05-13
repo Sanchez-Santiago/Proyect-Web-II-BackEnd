@@ -25,6 +25,7 @@ Plataforma web backend para la gestión de compra y venta de vehículos usados, 
 | **bcrypt** | Hash de contraseñas |
 | **Socket.io** | Chat en tiempo real |
 | **Cloudinary** | Almacenamiento de imágenes |
+| **Gemini API** | Generación de descripciones con IA |
 
 ## Arquitectura
 
@@ -61,6 +62,7 @@ src/
 │   ├── publications/        # Publicaciones de venta
 │   ├── chat/                # Chat + WebSocket (Socket.io)
 │   ├── favorites/           # Favoritos por publicación
+│   ├── gemini/              # Generación de descripciones con IA
 │   ├── user-preferences/   # Preferencias del buyer
 │   ├── ai-analysis/        # Análisis de IA (VehicleAnalytics)
 │   ├── notifications/      # Notificaciones del usuario
@@ -243,6 +245,12 @@ src/
 | PUT | `/reports/:id/status` | Cambiar estado (admin) | ADMIN |
 | DELETE | `/reports/:id` | Eliminar reporte (admin) | ADMIN |
 
+### Gemini (Descripciones IA)
+
+| Método | Ruta | Descripción | Auth |
+|--------|------|-------------|------|
+| POST | `/gemini/generate-description` | Generar descripción y precio sugerido | Sí |
+
 ### Upload
 
 | Método | Ruta | Descripción | Auth |
@@ -275,6 +283,9 @@ CLOUDINARY_API_SECRET=tu_api_secret
 # Supabase (opcional)
 SUPABASE_URL=https://xxx.supabase.co
 SUPABASE_KEY=tu_key
+
+# Gemini AI (obtener de https://aistudio.google.com/apikey)
+GEMINI_API_KEY=tu_gemini_api_key
 ```
 
 ## Comandos
@@ -317,6 +328,7 @@ npm run prisma:push
 14. **Documents**: Gestión de documentos de vehículos (título, VTV, seguro, etc.)
 15. **Subida de imágenes**: Integración con Cloudinary
 16. **CORS configurable**: Desde variable de entorno
+17. **Generación de descripciones con IA (Gemini)**: Endpoint `POST /gemini/generate-description` que recibe datos del vehículo y devuelve descripción comercial + precio sugerido
 
 ## Roadmap
 
@@ -335,6 +347,7 @@ npm run prisma:push
 - [x] Saved Searches
 - [x] Documents (vehículos)
 - [x] Upload de imágenes (Cloudinary)
+- [x] Descripciones con IA (Gemini)
 
 ## Licencia
 
