@@ -1,6 +1,9 @@
 import 'dotenv/config';
+import dns from 'node:dns';
 import { PrismaClient } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
+
+dns.setDefaultResultOrder('ipv4first');
 
 const prisma = new PrismaClient();
 
