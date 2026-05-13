@@ -12,12 +12,12 @@ export class FavoritesController {
   @Post()
   async add(@Request() req: any, @Body() dto: CreateFavoriteInput) {
     const favorite = await this.favoritesService.add(req.user.userId, dto);
-    return { message: 'Vehículo agregado a favoritos', favorite };
+    return { message: 'Publicación agregada a favoritos', favorite };
   }
 
-  @Delete(':vehicleId')
-  async remove(@Request() req: any, @Param('vehicleId') vehicleId: string) {
-    const result = await this.favoritesService.remove(req.user.userId, vehicleId);
+  @Delete(':publicationId')
+  async remove(@Request() req: any, @Param('publicationId') publicationId: string) {
+    const result = await this.favoritesService.remove(req.user.userId, publicationId);
     return result;
   }
 
@@ -27,9 +27,9 @@ export class FavoritesController {
     return { favorites };
   }
 
-  @Get('check/:vehicleId')
-  async checkFavorite(@Request() req: any, @Param('vehicleId') vehicleId: string) {
-    const result = await this.favoritesService.checkFavorite(req.user.userId, vehicleId);
+  @Get('check/:publicationId')
+  async checkFavorite(@Request() req: any, @Param('publicationId') publicationId: string) {
+    const result = await this.favoritesService.checkFavorite(req.user.userId, publicationId);
     return result;
   }
 }
