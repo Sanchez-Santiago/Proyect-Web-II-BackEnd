@@ -1,7 +1,7 @@
 {
   "name": "proyect-web-ii-backend",
   "version": "1.0.0",
-  "description": "Backeb del sistema plataforma web de compra y venta deautos usados",
+  "description": "Backend del sistema plataforma web de compra y venta de autos usados",
   "homepage": "https://github.com/Sanchez-Santiago/Proyect-Web-II-BackEnd#readme",
   "bugs": {
     "url": "https://github.com/Sanchez-Santiago/Proyect-Web-II-BackEnd/issues"
@@ -11,9 +11,9 @@
     "url": "git+https://github.com/Sanchez-Santiago/Proyect-Web-II-BackEnd.git"
   },
   "license": "ISC",
-  "author": "Santiago javier Sanchez, Giuliano Ayrton Pucci",
+  "author": "Santiago Javier Sanchez, Giuliano Ayrton Pucci",
   "type": "commonjs",
-  "main": "index.js",
+  "main": "dist/src/main.js",
   "prisma": {
     "seed": "tsx prisma/seed.ts"
   },
@@ -28,6 +28,7 @@
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
     "@nestjs/common": "^11.1.17",
+    "@nestjs/config": "^4.0.2",
     "@nestjs/core": "^11.1.17",
     "@nestjs/jwt": "^11.0.2",
     "@nestjs/passport": "^11.0.5",
@@ -37,14 +38,12 @@
     "@prisma/adapter-pg": "^7.5.0",
     "@prisma/client": "^6.19.3",
     "@supabase/supabase-js": "^2.99.3",
-    "@types/cookie-parser": "^1.4.10",
     "bcryptjs": "^3.0.3",
     "cloudinary": "^2.9.0",
     "cookie-parser": "^1.4.7",
     "dotenv": "^17.3.1",
     "express": "^5.2.1",
     "jsonwebtoken": "^9.0.3",
-    "nestjs": "^0.0.1",
     "nestjs-zod": "^5.2.1",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
@@ -56,6 +55,7 @@
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
+    "@types/cookie-parser": "^1.4.10",
     "@types/dotenv": "^6.1.1",
     "@types/express": "^5.0.6",
     "@types/jsonwebtoken": "^9.0.10",
