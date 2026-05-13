@@ -14,9 +14,6 @@
   "author": "Santiago Javier Sanchez, Giuliano Ayrton Pucci",
   "type": "commonjs",
   "main": "dist/src/main.js",
-  "prisma": {
-    "seed": "tsx prisma/seed.ts"
-  },
   "scripts": {
     "build": "npx prisma generate && npx nest build",
     "start": "node dist/src/main.js",
