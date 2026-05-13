@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import 'reflect-metadata';
 import { AppModule } from './app.module';
 import 'dotenv/config';
+import { json } from 'express';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -11,6 +12,8 @@ async function bootstrap() {
     origin: corsOrigins,
     credentials: true,
   });
+
+  app.use(json({ limit: '50mb' }));
 
   const port = process.env.PORT || 3000;
   await app.listen(port);

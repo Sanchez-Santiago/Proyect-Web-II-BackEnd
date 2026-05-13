@@ -69,7 +69,7 @@ export const PublicationModel = {
     return prisma.publication.findMany({
       where,
       include: {
-        vehicle: { include: { images: true } },
+        vehicle: { include: { images: true, analytics: true } },
         seller: { select: { id: true, fullName: true, email: true } },
         publicationFeatures: { include: { feature: true } },
       },
