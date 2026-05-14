@@ -14,8 +14,9 @@ const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: {
     rejectUnauthorized: false
-  }
-});
+  },
+  family: 4
+} as any);
 
 const adapter = new PrismaPg(pool as any);
 
