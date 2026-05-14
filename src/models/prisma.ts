@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import dns from 'node:dns';
+import * as dns from 'node:dns';
 import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
