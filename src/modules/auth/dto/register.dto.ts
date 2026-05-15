@@ -16,6 +16,8 @@ export const RegisterSchema = z.object({
     .regex(/[a-z]/, 'La contraseña debe tener al menos una minúscula')
     .regex(/[0-9]/, 'La contraseña debe tener al menos un número'),
   role: z.enum(['BUYER', 'SELLER', 'ADMIN']).optional().default('BUYER'),
+  province: z.string().min(1, 'La provincia es requerida').optional(),
+  city: z.string().min(1, 'La ciudad es requerida').optional(),
 });
 
 export class RegisterDto extends createZodDto(RegisterSchema) {}
