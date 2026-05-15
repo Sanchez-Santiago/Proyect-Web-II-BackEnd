@@ -35,7 +35,12 @@ export const ChatModel = {
     const chatIds = messages.map((m) => m.chatId);
 
     return prisma.chat.findMany({
-      where: { id: { in: chatIds } },
+      where: {
+        OR: [
+          { id: { in: chatIds } },
+          { publication: { sellerId: userId } },
+        ],
+      },
       include: {
         publication: { include: { vehicle: { include: { images: true } }, seller: true } },
         messages: {

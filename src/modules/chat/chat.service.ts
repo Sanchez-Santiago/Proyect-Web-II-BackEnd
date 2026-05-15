@@ -2,9 +2,12 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { ChatModel } from '../../models/chat.model';
 import { MessageModel } from '../../models/message.model';
 import { PublicationModel } from '../../models/publication.model';
+import { ChatGateway } from '../../gateways/chat.gateway';
 
 @Injectable()
 export class ChatService {
+  constructor(private chatGateway: ChatGateway) {}
+
   async create(userId: string, publicationId: string) {
     const publication = await PublicationModel.findById(publicationId);
     if (!publication) {
@@ -53,12 +56,16 @@ export class ChatService {
       throw new NotFoundException('Chat no encontrado');
     }
 
-    return MessageModel.create({
+    const message = await MessageModel.create({
       chat: { connect: { id: chatId } },
       user: { connect: { id: userId } },
       message: messageText,
       status: 'SENT',
     });
+
+    this.chatGateway.notifyNewMessage(chatId, message);
+
+    return message;
   }
 
   async markAsRead(chatId: string, userId: string) {
